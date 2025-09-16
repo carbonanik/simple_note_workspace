@@ -1,0 +1,10 @@
+{
+  "dart.flutterSdkPath": ".fvm/versions/stable",
+  "dart.runPubGetOnPubspecChanges": "never",
+  "files.watcherExclude": {
+    "**/.fvm": true
+  },
+  "search.exclude": {
+    "**/.fvm": true
+  }
+}
