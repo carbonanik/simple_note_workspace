@@ -1,0 +1,13 @@
+| Type         | When to Use                                                                                                                                                          |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **build**    | Changes that affect the build system or external dependencies. Example: updating npm packages, modifying webpack/gradle config, Dockerfile updates.                  |
+| **chore**    | Routine tasks that don’t affect app logic or tests. Example: bumping version numbers, editing `.gitignore`, updating configs without changing build or runtime code. |
+| **ci**       | Changes to Continuous Integration (CI) configuration or scripts. Example: updating GitHub Actions, CircleCI, Jenkins, or deployment pipelines.                       |
+| **docs**     | Documentation changes only. Example: updating README, code comments, API docs, wikis.                                                                                |
+| **feat**     | A new feature for the user. Example: adding a new button, endpoint, or module.                                                                                       |
+| **fix**      | A bug fix. Example: patching a crash, correcting logic, fixing typo that breaks behavior.                                                                            |
+| **perf**     | Performance improvements without changing behavior. Example: optimizing queries, reducing memory usage, speeding up algorithms.                                      |
+| **refactor** | Code changes that don’t fix a bug or add a feature. Example: cleaning up code, restructuring, renaming variables, splitting functions.                               |
+| **revert**   | Reverting a previous commit. Example: `git revert <hash>`.                                                                                                           |
+| **style**    | Changes that don’t affect meaning of the code. Example: formatting, whitespace, semicolons, lint fixes.                                                              |
+| **test**     | Adding or updating tests only. Example: new unit tests, fixing flaky tests, adjusting mocks.                                                                         |

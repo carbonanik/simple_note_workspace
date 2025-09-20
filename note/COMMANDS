@@ -1,0 +1,11 @@
+# command to remember -----------------------------------------------------
+
+> dart pub global activate fvm
+# Install flutter version manager
+
+> dart pub global activate melos
+# Install melos globally
+
+export PUB_CACHE="$HOME/.pub-cache"
+export PATH="$PATH:$PUB_CACHE/bin"
+# Add pub cache to path
