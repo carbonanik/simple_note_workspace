@@ -127,7 +127,7 @@ class BaseController {
   }
 }
 
-class Controller extends BaseController {
+class Control ler extends BaseController {
   final Subscribable<String> data = Subscribable('value');
 
   Controller() {
