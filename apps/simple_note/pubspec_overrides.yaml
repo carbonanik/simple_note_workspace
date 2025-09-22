@@ -1,0 +1,4 @@
+# melos_managed_dependency_overrides: simple_state
+dependency_overrides:
+  simple_state:
+    path: ../../packages/simple_state
