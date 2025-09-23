@@ -35,23 +35,44 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: Subscribe(
-          subscribable: controller.data,
-          builder: (data) {
-            return Text(data);
-          },
+        child: Column(
+          children: [
+            Subscribe(
+              subscribable: controller.data,
+              builder: (data) {
+                return Text(data);
+              },
+            ),
+            Subscribe(
+              subscribable: controller.mapped,
+              builder: (value) {
+                return Text(value);
+              },
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class Controller with BaseController {
-  final Subscribable<String> data = Subscribable('value');
+class Controller extends BaseController {
+  final Subscribable<String> data = Subscribable(
+    'value',
+    validator: (value) {
+      if (value.isEmpty) {
+        throw Exception('value cannot be empty');
+      }
+      return value;
+    },
+  );
 
-  Controller() {
+  late final mapped = data.map((into) => 'mapped: $into');
+
+  @override
+  init() {
     getDate();
-    listen(data, immediate: true, (value) {
+    listen(mapped, immediate: true, (value) {
       debugPrint('data changed: $value');
     });
   }

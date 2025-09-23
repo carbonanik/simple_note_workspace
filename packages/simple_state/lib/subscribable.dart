@@ -3,15 +3,20 @@ library;
 import 'package:flutter/material.dart';
 
 class Subscribable<T> {
-  Subscribable(T initial) : _value = initial;
+  Subscribable(T initial, {this.validator}) : _value = initial;
+
   T _value;
+  final T Function(T)? validator;
   final Map<Object, ValueChanged<T>> _subscribers = {};
 
-  get value => _value;
+  T get value => _value;
 
-  set value(T value) {
-    _value = value;
-    _notifySubscriber(_value);
+  set value(T newValue) {
+    final validatedValue = validator != null ? validator!(newValue) : newValue;
+    if (_value != validatedValue) {
+      _value = newValue;
+      _notifySubscriber(_value);
+    }
   }
 
   _notifySubscriber(T value) {
@@ -36,6 +41,14 @@ class Subscribable<T> {
     return Subscription(() {
       _subscribers.remove(key);
     });
+  }
+
+  Subscribable<R> map<R>(R Function(T) mapper) {
+    final computed = Subscribable<R>(mapper(_value));
+    subscribe((value) {
+      computed.value = mapper(value);
+    });
+    return computed;
   }
 }
 

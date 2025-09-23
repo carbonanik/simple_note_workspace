@@ -3,7 +3,28 @@ library;
 import 'package:flutter/material.dart';
 import 'subscribable.dart';
 
-mixin BaseController {
+abstract class BaseController with Disposable, ListenToSubscribable {
+  BaseController() {
+    init();
+  }
+  init() {}
+
+  @override
+  void listen<T>(
+    Subscribable<T> subscribable,
+    ValueChanged<T> onData, {
+    bool immediate = false,
+  }) {
+    super.listen(subscribable, onData, immediate: immediate);
+  }
+
+  @override
+  void dispose() {
+    cancelSubscriptions();
+  }
+}
+
+mixin ListenToSubscribable {
   final List<Subscription> _subscriptions = [];
 
   void listen<T>(
@@ -15,11 +36,14 @@ mixin BaseController {
     _subscriptions.add(sub);
   }
 
-  /// Clean up all subscriptions
-  void dispose() {
+  void cancelSubscriptions() {
     for (final sub in _subscriptions) {
       sub.cancel();
     }
     _subscriptions.clear();
   }
+}
+
+mixin Disposable {
+  void dispose();
 }
