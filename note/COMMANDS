@@ -9,3 +9,10 @@
 export PUB_CACHE="$HOME/.pub-cache"
 export PATH="$PATH:$PUB_CACHE/bin"
 # Add pub cache to path
+
+> melos init
+# Initialize melos in the repository
+
+> fvm flutter create --template=package packages/simple_state
+# Create a new flutter package
+
