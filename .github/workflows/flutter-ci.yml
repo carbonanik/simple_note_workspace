@@ -12,7 +12,7 @@ on:
 
 jobs:
   test:
-    name: Run Flutter Tests
+    name: Run Flutter Tests (Monorepo)
     runs-on: ubuntu-latest
 
     steps:
@@ -27,14 +27,19 @@ jobs:
           flutter-version: '3.35.3'
           channel: stable
 
-      # Get dependencies
-      - name: Install Dependencies
-        run: flutter pub get
+      # Setup Melos
+      - name: Install Melos
+        run: dart pub global activate melos
 
-      # Analyze code
-      - name: Run Flutter Analyze
-        run: flutter analyze
+      # Bootstrap all packages (install deps + link local packages)
+      - name: Melos bootstrap
+        run: melos bootstrap
 
-      # Run tests
-      - name: Run Flutter Tests
-        run: flutter test --coverage
+      # Run analysis for all packages
+      - name: Analyze
+        run: melos run analyze --no-select
+        continue-on-error: false
+
+      # Run all tests across packages
+      - name: Run Tests
+        run: melos run test --no-select

@@ -10,6 +10,9 @@ scripts:
   analyze:
     exec: dart analyze
 
+  test:
+    exec: flutter test --coverage
+
   get:
     run: melos exec -c 1  -- "flutter pub get"
 
