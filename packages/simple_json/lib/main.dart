@@ -40,42 +40,50 @@ import 'package:simple_json/main.reflectable.dart';
 void main() {
   initializeReflectable();
 
-  // var user = User(
-  //   id: 1,
-  //   name: "Anik",
-  //   age: 25,
-  //   list: [1, 2, 3],
-  //   address: Address(city: "Dhaka", country: "Bangladesh"),
-  // );
+  var user = User(
+    id: 1,
+    name: "Anik",
+    age: 25,
+    // list: [1, 2, 3],
+    posts: [
+      Post(id: 1, title: "Post 1", body: "Body 1"),
+      Post(id: 2, title: "Post 2", body: "Body 2"),
+      Post(id: 3, title: "Post 3", body: "Body 3"),
+    ],
+    address: Address(city: "Dhaka", country: "Bangladesh"),
+  );
 
-  final json = {
-    "id": 1,
-    "name": "Anik",
-    "age": 25,
-    "list": [1, 2, 3],
-    "address": {"city": "Dhaka", "country": "Bangladesh"},
-  };
+  // final json = {
+  //   "id": 1,
+  //   "full_name": "Anik",
+  //   "age": 25,
+  //   "list": [1, 2, 3],
+  //   "address": {"city": "Dhaka", "country": "Bangladesh"},
+  // };
+
+  final json = toJson(user);
 
   print(json);
 
   final user2 = fromJson<User>(json);
-  print(user2.address.city);
+  print(toJson(user2));
 }
 
 @jsonReflector
 class User with ReflectableEquality {
   final int id;
-  // @JsonField("full_name")
+
+  @JsonField("full_name")
   final String name;
   final int age;
-  final List<int> list;
+  final List<Post> posts;
   final Address address;
 
   const User({
     required this.id,
     required this.name,
     required this.age,
-    required this.list,
+    required this.posts,
     required this.address,
   });
 }
@@ -86,4 +94,13 @@ class Address with ReflectableEquality {
   final String country;
 
   const Address({required this.city, required this.country});
+}
+
+@jsonReflector
+class Post with ReflectableEquality {
+  final int id;
+  final String title;
+  final String body;
+
+  const Post({required this.id, required this.title, required this.body});
 }
