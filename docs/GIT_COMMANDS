@@ -1,0 +1,31 @@
+// update commit message
+git commit --amend -m "build successful"
+
+// update the last commit with new files with existing commit message
+git add .
+git commit --amend --no-edit
+
+// override the remote commit 
+git push origin master --force
+
+// 
+git stash
+git stash pop
+git stash list
+git stash save message
+git stash apply <stash@{index}>
+
+//
+git revert <commit_hash>
+
+//
+git log
+git log --oneline
+git log --graph --oneline --decorate
+
+//
+git bisect
+git bisect start
+git bisect bad
+git bisect good
+git bisect reset
