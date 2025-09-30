@@ -14,10 +14,8 @@ class JsonReflector extends Reflectable {
 const jsonReflector = JsonReflector();
 
 class JsonField {
-  final String? name;
-  final Type? type;
-  final bool isList;
-  const JsonField({this.name, this.type, this.isList = false});
+  final String name;
+  const JsonField(this.name);
 }
 
 Map<String, dynamic> toJson(Object obj) {
@@ -51,64 +49,38 @@ Map<String, dynamic> toJson(Object obj) {
 }
 
 dynamic _fromMapToType(Type type, Map<String, dynamic> map) {
-  var cm = jsonReflector.reflectType(type) as ClassMirror;
+  var classMirror = jsonReflector.reflectType(type) as ClassMirror;
 
-  // find unnamed constructor
-  var ctor = cm.declarations.values.whereType<MethodMirror>().firstWhere(
-    (m) => m.isConstructor && m.constructorName == "",
-  );
+  var defaultConstructor = classMirror.declarations.values
+      .whereType<MethodMirror>()
+      .firstWhere((m) => m.isConstructor && m.constructorName == "");
 
   final namedArgs = <Symbol, dynamic>{};
 
-  for (var param in ctor.parameters) {
+  for (var param in defaultConstructor.parameters) {
     var key = param.simpleName;
     if (!map.containsKey(key)) continue;
+
+    Type? nestedType;
+    try {
+      nestedType = param.type.reflectedType;
+    } catch (_) {}
+
     var raw = map[key];
 
-    // Get the VariableMirror for this field
-    var decl = cm.declarations[key];
-    JsonField? jsonFieldMeta;
-    if (decl is VariableMirror) {
-      for (var meta in decl.metadata) {
-        if (meta is JsonField) {
-          jsonFieldMeta = meta;
-          break;
-        }
-      }
-    }
-
-    var nestedType = jsonFieldMeta?.type;
-    var isList = jsonFieldMeta?.isList ?? false;
-
-    if (raw == null) {
-      namedArgs[Symbol(key)] = null;
-    } else if (nestedType != null && raw is Map) {
-      // ✅ convert nested map to object
+    if (nestedType != null && raw is Map) {
       namedArgs[Symbol(key)] = _fromMapToType(
         nestedType,
         raw as Map<String, dynamic>,
       );
-    } else if (nestedType != null && isList && raw is List) {
-      // ✅ convert list of maps
-      namedArgs[Symbol(key)] = raw.map((e) {
-        if (e is Map) {
-          return _fromMapToType(nestedType, e as Map<String, dynamic>);
-        }
-        return e;
-      }).toList();
     } else {
-      // primitive or already correct type
       namedArgs[Symbol(key)] = raw;
     }
   }
-
-  return cm.newInstance("", [], namedArgs);
+  return classMirror.newInstance("", [], namedArgs);
 }
 
-/// Public generic entrypoint: T fromJson<T>(Map<String, dynamic>)
 T fromJson<T>(Map<String, dynamic> json) {
-  // If T is reflectable (annotated), call the helper.
-  // If T is primitive or not annotated, just throw or return json as-is (developer decision).
   if (!jsonReflector.canReflectType(T)) {
     throw ArgumentError(
       "Type $T is not reflectable — annotate with @jsonReflector",
