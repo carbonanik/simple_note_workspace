@@ -17,4 +17,8 @@ scripts:
     run: melos exec -c 1  -- "flutter pub get"
 
   clean:
-     run: melos exec -c 1  -- "flutter clean"
+    run: melos exec -c 1  -- "flutter clean"
+  
+  build_runner:
+    run: melos exec -c 1 --depends-on build_runner -- dart run build_runner build --delete-conflicting-outputs
+    description: Runs build_runner to generate files in all packages.
