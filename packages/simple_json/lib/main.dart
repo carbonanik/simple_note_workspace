@@ -44,7 +44,6 @@ void main() {
     id: 1,
     name: "Anik",
     age: 25,
-    // list: [1, 2, 3],
     posts: [
       Post(id: 1, title: "Post 1", body: "Body 1"),
       Post(id: 2, title: "Post 2", body: "Body 2"),
@@ -73,9 +72,10 @@ void main() {
 class User with ReflectableEquality {
   final int id;
 
-  @JsonField("full_name")
+  @JsonField(jsonKey: "full_name")
   final String name;
   final int age;
+  @JsonField(isList: true, type: Post)
   final List<Post> posts;
   final Address address;
 

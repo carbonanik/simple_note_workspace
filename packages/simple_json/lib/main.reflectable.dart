@@ -174,7 +174,7 @@ final _data = <r.Reflectable, r.ReflectorData>{
         -1,
         -1,
         null,
-        const <Object>[const prefix0.JsonField("full_name")],
+        const <Object>[const prefix0.JsonField(jsonKey: "full_name")],
       ),
       r.VariableMirrorImpl(
         r'age',
@@ -196,7 +196,9 @@ final _data = <r.Reflectable, r.ReflectorData>{
         -1,
         -1,
         null,
-        const [],
+        const <Object>[
+          const prefix0.JsonField(isList: true, type: prefix1.Post),
+        ],
       ),
       r.VariableMirrorImpl(
         r'address',

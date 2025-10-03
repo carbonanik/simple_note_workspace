@@ -14,11 +14,11 @@ class JsonReflector extends Reflectable {
 const jsonReflector = JsonReflector();
 
 class JsonField {
-  final String name;
-  const JsonField(this.name);
+  final String? jsonKey;
+  final bool? isList;
+  final Type? type;
+  const JsonField({this.jsonKey, this.isList, this.type});
 }
-
-// ==================== TO JSON ====================
 
 Map<String, dynamic> toJson(Object obj) {
   var mirror = jsonReflector.reflect(obj);
@@ -33,7 +33,7 @@ Map<String, dynamic> toJson(Object obj) {
 
       for (var meta in decl.metadata) {
         if (meta is JsonField) {
-          key = meta.name;
+          key = meta.jsonKey ?? name;
         }
       }
 
@@ -54,93 +54,63 @@ Map<String, dynamic> toJson(Object obj) {
   return result;
 }
 
-// ==================== FROM JSON ====================
-
-MethodMirror _getDefaultConstructor(ClassMirror classMirror) {
-  return classMirror.declarations.values.whereType<MethodMirror>().firstWhere(
-    (m) => m.isConstructor && m.constructorName == "",
-  );
-}
-
-Type? _tryGetParamType(ParameterMirror param) {
-  try {
-    return param.type.reflectedType;
-  } catch (_) {
-    return null;
-  }
-}
-
-String? _findJsonFieldKeyInMetadata(List<Object> metadata) {
-  for (var meta in metadata) {
-    if (meta is JsonField) {
-      return meta.name;
-    }
-  }
-  return null;
-}
-
-Map<Symbol, dynamic> _generateNamedArgsForDefaultConstructor(
-  ClassMirror classMirror,
-  MethodMirror defaultConstructor,
-  Map<String, dynamic> map,
-) {
-  final namedArgs = <Symbol, dynamic>{};
-  for (var param in defaultConstructor.parameters) {
-    var arg = _generateSingleArg(classMirror, param, map);
-    if (arg != null) {
-      namedArgs[arg.key] = arg.value;
-    }
-  }
-
-  return namedArgs;
-}
-
-MapEntry? _generateSingleArg(
-  ClassMirror classMirror,
-  ParameterMirror param,
-  Map<String, dynamic> map,
-) {
-  // keys
-  var key = param.simpleName;
-
-  var jsonKey = _findJsonFieldKeyInMetadata(
-    classMirror.declarations[key]?.metadata ?? [],
-  );
-  jsonKey ??= key;
-
-  // early return
-  if (!map.containsKey(jsonKey)) return null;
-
-  Type? nestedType = _tryGetParamType(param);
-  var raw = map[jsonKey];
-
-  // var listMirror = jsonReflector.reflectType(List) as ClassMirror;
-  // var isList = param.type.isSubtypeOf(listMirror);
-  print(param.owner);
-
-  // making map entry
-  MapEntry mapEntry;
-  if (nestedType != null && raw is Map) {
-    var objIns = _fromMapToType(nestedType, raw as Map<String, dynamic>);
-    mapEntry = MapEntry(Symbol(key), objIns);
-  } else {
-    mapEntry = MapEntry(Symbol(key), raw);
-  }
-
-  return mapEntry;
-}
-
-dynamic _fromMapToType(Type type, Map<String, dynamic> map) {
+dynamic _fromMapToType(Type type, Map<String, dynamic> map, String callKey) {
+  print('call _fromMapToType type: $type callKey: $callKey');
   var classMirror = jsonReflector.reflectType(type) as ClassMirror;
 
-  var defaultConstructor = _getDefaultConstructor(classMirror);
+  var defaultConstructor = classMirror.declarations.values
+      .whereType<MethodMirror>()
+      .firstWhere((m) => m.isConstructor && m.constructorName == "");
 
-  final namedArgs = _generateNamedArgsForDefaultConstructor(
-    classMirror,
-    defaultConstructor,
-    map,
-  );
+  final namedArgs = <Symbol, dynamic>{};
 
+  for (var param in defaultConstructor.parameters) {
+    var key = param.simpleName;
+
+    var jsonKey = param.simpleName;
+    JsonField? fieldMetaData;
+    for (var meta in classMirror.declarations[key]?.metadata ?? []) {
+      if (meta is JsonField) {
+        jsonKey = meta.jsonKey ?? key;
+        fieldMetaData = meta;
+      }
+    }
+
+    print("type: $type, key: $key");
+    if (!map.containsKey(jsonKey)) continue;
+
+    Type? nestedType;
+    try {
+      nestedType = param.type.reflectedType;
+    } catch (_) {}
+
+    var raw = map[jsonKey];
+
+    if (nestedType != null && raw is Map) {
+      namedArgs[Symbol(key)] = _fromMapToType(
+        nestedType,
+        raw as Map<String, dynamic>,
+        'from nested type',
+      );
+    } else if (fieldMetaData?.isList == true && raw is List) {
+      final listItemType = fieldMetaData!.type!;
+
+      final items = <dynamic>[];
+      for (var r in raw) {
+        final listItemInstance = _fromMapToType(
+          listItemType,
+          r as Map<String, dynamic>,
+          'from list item',
+        );
+        items.add(listItemInstance);
+      }
+
+      namedArgs[Symbol(key)] = items;
+    } else {
+      namedArgs[Symbol(key)] = raw;
+    }
+  }
+  // print(namedArgs);
   return classMirror.newInstance("", [], namedArgs);
 }
 
@@ -150,10 +120,8 @@ T fromJson<T>(Map<String, dynamic> json) {
       "Type $T is not reflectable — annotate with @jsonReflector",
     );
   }
-  return _fromMapToType(T, json) as T;
+  return _fromMapToType(T, json, 'from fromJson') as T;
 }
-
-// ==================== EQUALITY ====================
 
 mixin ReflectableEquality {
   @override
