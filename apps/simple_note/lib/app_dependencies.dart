@@ -27,6 +27,7 @@ class _AppDependenciesState extends State<AppDependencies> {
   void initState() {
     notesRepository = InMemoryNotesRepository();
     notesController = NotesController(notesRepository);
+    notesController.getNotes();
     super.initState();
   }
 

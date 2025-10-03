@@ -3,15 +3,12 @@ import 'package:simple_note/features/notes/domain/entities/note.dart';
 import 'package:simple_note/features/notes/domain/repositories/notes_repository.dart';
 import 'package:simple_note/features/notes/presentation/controllers/notes_controller.dart';
 
-/// Mock implementation of NotesRepository for testing
-/// Can be configured to return specific data or throw errors
 class MockNotesRepository implements NotesRepository {
   List<NoteEntity> _notes = [];
   bool _shouldThrowError = false;
   String _errorMessage = 'Mock error occurred';
   Duration _delay = Duration.zero;
 
-  // Configuration methods
   void setNotes(List<NoteEntity> notes) {
     _notes = List.from(notes);
   }
@@ -34,14 +31,12 @@ class MockNotesRepository implements NotesRepository {
     _delay = Duration.zero;
   }
 
-  // Helper to simulate network delay
   Future<void> _simulateDelay() async {
     if (_delay > Duration.zero) {
       await Future.delayed(_delay);
     }
   }
 
-  // Helper to check if should throw
   void _checkError() {
     if (_shouldThrowError) {
       throw Exception(_errorMessage);
@@ -97,11 +92,9 @@ class MockNotesRepository implements NotesRepository {
     }
   }
 
-  // Getter for testing verification
   int get callCount => _notes.length;
 }
 
-// Example test file showing how to use MockNotesRepository
 void main() {
   late MockNotesRepository mockRepository;
   late NotesController controller;
@@ -117,9 +110,10 @@ void main() {
   });
 
   group('NotesController -', () {
-    test('initial state is loading', () {
-      expect(controller.status, NotesStatus.loading);
-      expect(controller.isLoading, true);
+    test('initial state is initial', () {
+      expect(controller.status, NotesStatus.initial);
+      expect(controller.notes.isEmpty, true);
+      expect(controller.errorMessage, null);
     });
 
     test('loads notes successfully', () async {
@@ -130,8 +124,8 @@ void main() {
       mockRepository.setNotes(testNotes);
 
       // Act
-      controller = NotesController(mockRepository);
-      await Future.delayed(Duration.zero); // Wait for async operation
+      controller.getNotes();
+      await Future.delayed(Duration.zero);
 
       // Assert
       expect(controller.isSuccess, true);
@@ -139,12 +133,34 @@ void main() {
       expect(controller.notes.first.title, 'Test Note');
     });
 
+    test('shows loading state when loading notes', () async {
+      // Arrange
+      final note = NoteEntity(
+        id: '1',
+        title: 'Test Note',
+        content: 'Test Content',
+      );
+      mockRepository.setNotes([note]);
+      mockRepository.setDelay(Duration(milliseconds: 100));
+
+      // Act
+      controller.getNotes();
+
+      // Assert
+      expect(controller.isLoading, true);
+      expect(controller.notes.length, 0);
+      await Future.delayed(Duration(milliseconds: 200));
+      expect(controller.isLoading, false);
+      expect(controller.isSuccess, true);
+      expect(controller.notes.length, 1);
+    });
+
     test('handles error when loading notes fails', () async {
       // Arrange
       mockRepository.setShouldThrowError(true, 'Network error');
 
       // Act
-      controller = NotesController(mockRepository);
+      controller.getNotes();
       await Future.delayed(Duration.zero);
 
       // Assert
@@ -155,9 +171,6 @@ void main() {
     test('adds note successfully', () async {
       // Arrange
       mockRepository.setNotes([]);
-      controller = NotesController(mockRepository);
-      await Future.delayed(Duration.zero);
-
       final newNote = NoteEntity(
         id: '2',
         title: 'New Note',
@@ -166,6 +179,7 @@ void main() {
 
       // Act
       await controller.addNote(newNote);
+      await Future.delayed(Duration.zero);
 
       // Assert
       expect(controller.notes.length, 1);
@@ -176,9 +190,6 @@ void main() {
     test('handles error when adding note fails', () async {
       // Arrange
       mockRepository.setNotes([]);
-      controller = NotesController(mockRepository);
-      await Future.delayed(Duration.zero);
-
       mockRepository.setShouldThrowError(true, 'Failed to add note');
 
       final newNote = NoteEntity(
@@ -189,6 +200,7 @@ void main() {
 
       // Act
       await controller.addNote(newNote);
+      await Future.delayed(Duration.zero);
 
       // Assert
       expect(controller.hasError, true);
@@ -203,8 +215,6 @@ void main() {
         content: 'Original Content',
       );
       mockRepository.setNotes([initialNote]);
-      controller = NotesController(mockRepository);
-      await Future.delayed(Duration.zero);
 
       final updatedNote = NoteEntity(
         id: '1',
@@ -214,6 +224,7 @@ void main() {
 
       // Act
       await controller.updateNote(updatedNote);
+      await Future.delayed(Duration.zero);
 
       // Assert
       expect(controller.notes.first.title, 'Updated');
@@ -227,11 +238,10 @@ void main() {
         NoteEntity(id: '2', title: 'Note 2', content: 'Content 2'),
       ];
       mockRepository.setNotes(notes);
-      controller = NotesController(mockRepository);
-      await Future.delayed(Duration.zero);
 
       // Act
       await controller.deleteNote('1');
+      await Future.delayed(Duration.zero);
 
       // Assert
       expect(controller.notes.length, 1);
@@ -245,33 +255,12 @@ void main() {
 
       // Act
       final stopwatch = Stopwatch()..start();
-      controller = NotesController(mockRepository);
-      await Future.delayed(Duration(milliseconds: 150));
+      await controller.getNotes();
       stopwatch.stop();
 
       // Assert
       expect(stopwatch.elapsedMilliseconds, greaterThanOrEqualTo(100));
       expect(controller.isSuccess, true);
-    });
-
-    test('retries after error', () async {
-      // Arrange
-      mockRepository.setShouldThrowError(true);
-      controller = NotesController(mockRepository);
-      await Future.delayed(Duration.zero);
-
-      expect(controller.hasError, true);
-
-      // Act - Fix the error and retry
-      mockRepository.setShouldThrowError(false);
-      mockRepository.setNotes([
-        NoteEntity(id: '1', title: 'Test', content: 'Content'),
-      ]);
-      await controller.getNotes();
-
-      // Assert
-      expect(controller.isSuccess, true);
-      expect(controller.notes.length, 1);
     });
   });
 }

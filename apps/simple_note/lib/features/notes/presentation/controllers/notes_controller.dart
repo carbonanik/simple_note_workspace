@@ -8,9 +8,7 @@ enum NotesStatus { initial, loading, success, error }
 
 class NotesController extends ChangeNotifier {
   final NotesRepository notesRepository;
-  NotesController(this.notesRepository) {
-    getNotes();
-  }
+  NotesController(this.notesRepository);
 
   List<NoteEntity> _notes = [];
   NotesStatus _status = NotesStatus.initial;
