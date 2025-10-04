@@ -14,6 +14,8 @@ class Order {
     required this.products,
     required this.amount,
   });
+
+  factory Order.fromMap(Map<String, dynamic> json) => OrderFromMap(json);
 }
 
 @jsonGen
@@ -22,4 +24,6 @@ class Product {
   String id;
   double amount;
   Product({required this.name, required this.id, required this.amount});
+
+  factory Product.fromMap(Map<String, dynamic> json) => ProductFromMap(json);
 }

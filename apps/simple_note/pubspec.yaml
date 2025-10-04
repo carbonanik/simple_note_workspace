@@ -12,7 +12,6 @@ dependencies:
   cupertino_icons: ^1.0.8
   simple_state:
     path: ../../packages/simple_state
-  mockito: ^5.5.0
 
 dev_dependencies:
   flutter_test:

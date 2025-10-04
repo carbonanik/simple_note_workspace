@@ -15,191 +15,259 @@ class JsonGenerator extends GeneratorForAnnotation<JSONGenAnnotation> {
     final visitor = ModelVisitor();
     element.visitChildren(visitor);
 
-    final buffer = StringBuffer();
-    String className = '${visitor.className}Gen';
+    final generator = _CodeGenerator(visitor);
+    return generator.generate();
+  }
+}
 
-    // CLASS DECLARATION
-    buffer.writeln('class $className {');
+class _CodeGenerator {
+  final ModelVisitor visitor;
+  final StringBuffer _buffer = StringBuffer();
 
-    // FIELDS
-    for (int i = 0; i < visitor.fields.length; i++) {
-      buffer.writeln(
-        'final ${visitor.fields.values.elementAt(i)} ${visitor.fields.keys.elementAt(i)};',
-      );
-    }
+  _CodeGenerator(this.visitor);
 
-    // CONSTRUCTOR
-    buffer.writeln('const $className({');
-    for (int i = 0; i < visitor.fields.length; i++) {
-      buffer.writeln('required this.${visitor.fields.keys.elementAt(i)},');
-    }
-    buffer.writeln('});');
-
-    // TO MAP
-    buffer.writeln('Map<String, dynamic> toMap() {');
-    buffer.writeln('return {');
-    for (int i = 0; i < visitor.fields.length; i++) {
-      final fieldName = visitor.fields.keys.elementAt(i);
-      final fieldType = visitor.fieldTypes.values.elementAt(i);
-      buffer.writeln(_generateToMapEntry(fieldName, fieldType));
-    }
-    buffer.writeln('};');
-    buffer.writeln('}');
-
-    // FROM MAP
-    buffer.writeln('factory $className.fromMap(Map<String, dynamic> map) {');
-    buffer.writeln('return $className(');
-    for (int i = 0; i < visitor.fields.length; i++) {
-      final fieldName = visitor.fields.keys.elementAt(i);
-      final fieldType = visitor.fieldTypes.values.elementAt(i);
-      final typeString = visitor.fields.values.elementAt(i);
-      buffer.writeln(_generateFromMapEntry(fieldName, fieldType, typeString));
-    }
-    buffer.writeln(');');
-    buffer.writeln('}');
-
-    // copyWith
-    buffer.writeln('$className copyWith({');
-    for (int i = 0; i < visitor.fields.length; i++) {
-      buffer.writeln(
-        '${visitor.fields.values.elementAt(i)}? ${visitor.fields.keys.elementAt(i)},',
-      );
-    }
-    buffer.writeln('}) {');
-    buffer.writeln('return $className(');
-    for (int i = 0; i < visitor.fields.length; i++) {
-      buffer.writeln(
-        "${visitor.fields.keys.elementAt(i)}: ${visitor.fields.keys.elementAt(i)} ?? this.${visitor.fields.keys.elementAt(i)},",
-      );
-    }
-    buffer.writeln(');');
-    buffer.writeln('}');
-
-    buffer.writeln('}');
-
-    return buffer.toString();
+  String generate() {
+    _writeHeader();
+    _writeExtension();
+    _writeFromMapFunction();
+    return _buffer.toString();
   }
 
-  String _generateToMapEntry(String fieldName, DartType fieldType) {
-    if (_isListType(fieldType)) {
-      final innerType = _getListInnerType(fieldType);
-      if (_isCustomType(innerType)) {
+  void _writeHeader() {
+    _buffer
+      ..writeln('// ignore_for_file: non_constant_identifier_names')
+      ..writeln('// ignore_for_file: curly_braces_in_flow_control_structures')
+      ..writeln();
+  }
+
+  void _writeExtension() {
+    final className = visitor.className;
+    _buffer.writeln('extension ${className}Extension on $className {');
+    _writeToMapMethod();
+    _writeCopyWithMethod();
+    _buffer.writeln('}');
+  }
+
+  void _writeToMapMethod() {
+    _buffer
+      ..writeln('  Map<String, dynamic> toMap() {')
+      ..writeln('    return {');
+
+    for (final entry in _getFieldEntries()) {
+      final mapper = _ToMapEntryGenerator(entry.name, entry.type);
+      _buffer.writeln('      ${mapper.generate()}');
+    }
+
+    _buffer
+      ..writeln('    };')
+      ..writeln('  }')
+      ..writeln();
+  }
+
+  void _writeCopyWithMethod() {
+    final className = visitor.className;
+
+    _buffer.writeln('  $className copyWith({');
+    for (final entry in _getFieldEntries()) {
+      _buffer.writeln('    ${entry.typeString}? ${entry.name},');
+    }
+    _buffer.writeln('  }) {');
+
+    _buffer.writeln('    return $className(');
+    for (final entry in _getFieldEntries()) {
+      _buffer.writeln(
+        '      ${entry.name}: ${entry.name} ?? this.${entry.name},',
+      );
+    }
+    _buffer
+      ..writeln('    );')
+      ..writeln('  }');
+  }
+
+  void _writeFromMapFunction() {
+    final className = visitor.className;
+    _buffer
+      ..writeln()
+      ..writeln('$className ${className}FromMap(Map<String, dynamic> map) {')
+      ..writeln('  return $className(');
+
+    for (final entry in _getFieldEntries()) {
+      final mapper = _FromMapEntryGenerator(
+        entry.name,
+        entry.type,
+        entry.typeString,
+      );
+      _buffer.writeln('    ${mapper.generate()}');
+    }
+
+    _buffer
+      ..writeln('  );')
+      ..writeln('}');
+  }
+
+  List<_FieldEntry> _getFieldEntries() {
+    final entries = <_FieldEntry>[];
+    for (int i = 0; i < visitor.fields.length; i++) {
+      entries.add(
+        _FieldEntry(
+          name: visitor.fields.keys.elementAt(i),
+          type: visitor.fieldTypes.values.elementAt(i),
+          typeString: visitor.fields.values.elementAt(i),
+        ),
+      );
+    }
+    return entries;
+  }
+}
+
+/// Represents a field with its metadata
+class _FieldEntry {
+  final String name;
+  final DartType type;
+  final String typeString;
+
+  _FieldEntry({
+    required this.name,
+    required this.type,
+    required this.typeString,
+  });
+}
+
+/// Generates toMap entries for fields
+class _ToMapEntryGenerator {
+  final String fieldName;
+  final DartType fieldType;
+
+  _ToMapEntryGenerator(this.fieldName, this.fieldType);
+
+  String generate() {
+    final typeHelper = _TypeHelper(fieldType);
+
+    if (typeHelper.isList) {
+      final innerType = typeHelper.listInnerType;
+      if (_TypeHelper(innerType).isCustom) {
         return "'$fieldName': $fieldName.map((e) => e.toMap()).toList(),";
       }
       return "'$fieldName': $fieldName,";
-    } else if (_isCustomType(fieldType)) {
+    }
+
+    if (typeHelper.isCustom) {
       return "'$fieldName': $fieldName.toMap(),";
     }
+
     return "'$fieldName': $fieldName,";
   }
+}
 
-  String _generateFromMapEntry(
-    String fieldName,
-    DartType fieldType,
-    String typeString,
-  ) {
-    final buffer = StringBuffer();
-    buffer.write("$fieldName: ");
+/// Generates fromMap entries for fields
+class _FromMapEntryGenerator {
+  final String fieldName;
+  final DartType fieldType;
+  final String typeString;
 
-    if (_isListType(fieldType)) {
-      final innerType = _getListInnerType(fieldType);
-      final innerTypeString = innerType.getDisplayString(
-        withNullability: false,
-      );
+  _FromMapEntryGenerator(this.fieldName, this.fieldType, this.typeString);
 
-      buffer.write("(() {\n");
-      buffer.write("  try {\n");
-      buffer.write("    final list = map['$fieldName'];\n");
-      buffer.write("    if (list == null) throw Exception('Field is null');\n");
-      buffer.write(
-        "    if (list is! List) throw Exception('Expected List but got \${list.runtimeType}');\n",
-      );
+  String generate() {
+    final typeHelper = _TypeHelper(fieldType);
+    final buffer = StringBuffer('$fieldName: ');
 
-      if (_isCustomType(innerType)) {
-        buffer.write("    return list.map((e) {\n");
-        buffer.write("      try {\n");
-        buffer.write(
-          "        if (e is! Map<String, dynamic>) throw Exception('Expected Map<String, dynamic> but got \${e.runtimeType}');\n",
-        );
-        buffer.write("        return ${innerTypeString}Gen.fromMap(e);\n");
-        buffer.write("      } catch (e) {\n");
-        buffer.write(
-          "        throw Exception('Error parsing list item to $innerTypeString: \$e');\n",
-        );
-        buffer.write("      }\n");
-        buffer.write("    }).toList();\n");
-      } else {
-        buffer.write("    return List<$innerTypeString>.from(list.map((e) {\n");
-        buffer.write(
-          "      if (e is! $innerTypeString) throw Exception('Expected $innerTypeString but got \${e.runtimeType}');\n",
-        );
-        buffer.write("      return e;\n");
-        buffer.write("    }));\n");
-      }
-
-      buffer.write("  } catch (e) {\n");
-      buffer.write(
-        "    throw Exception('Error parsing field \"$fieldName\" of type \"$typeString\": \$e');\n",
-      );
-      buffer.write("  }\n");
-      buffer.write("})(),");
-    } else if (_isCustomType(fieldType)) {
-      final cleanType = typeString.replaceFirst('*', '');
-      buffer.write("(() {\n");
-      buffer.write("  try {\n");
-      buffer.write("    final value = map['$fieldName'];\n");
-      buffer.write(
-        "    if (value == null) throw Exception('Field is null');\n",
-      );
-      buffer.write(
-        "    if (value is! Map<String, dynamic>) throw Exception('Expected Map<String, dynamic> but got \${value.runtimeType}');\n",
-      );
-      buffer.write("    return ${cleanType}Gen.fromMap(value);\n");
-      buffer.write("  } catch (e) {\n");
-      buffer.write(
-        "    throw Exception('Error parsing field \"$fieldName\" of type \"$typeString\": \$e');\n",
-      );
-      buffer.write("  }\n");
-      buffer.write("})(),");
+    if (typeHelper.isList) {
+      buffer.write(_generateListParsing(typeHelper));
+    } else if (typeHelper.isCustom) {
+      buffer.write(_generateCustomTypeParsing());
     } else {
-      buffer.write("(() {\n");
-      buffer.write("  try {\n");
-      buffer.write("    final value = map['$fieldName'];\n");
-      buffer.write(
-        "    if (value == null) throw Exception('Field is null');\n",
-      );
-      buffer.write(
-        "    if (value is! $typeString) throw Exception('Expected $typeString but got \${value.runtimeType}');\n",
-      );
-      buffer.write("    return value;\n");
-      buffer.write("  } catch (e) {\n");
-      buffer.write(
-        "    throw Exception('Error parsing field \"$fieldName\" of type \"$typeString\": \$e');\n",
-      );
-      buffer.write("  }\n");
-      buffer.write("})(),");
+      buffer.write(_generatePrimitiveParsing());
     }
 
     return buffer.toString();
   }
 
-  bool _isListType(DartType type) {
-    return type.isDartCoreList;
+  String _generateListParsing(_TypeHelper typeHelper) {
+    final innerType = typeHelper.listInnerType;
+    final innerTypeString = innerType.getDisplayString(withNullability: false);
+    final innerTypeHelper = _TypeHelper(innerType);
+
+    return '''(() {
+      try {
+        final list = map['$fieldName'];
+        if (list == null) throw Exception('Field is null');
+        if (list is! List) throw Exception('Expected List but got \${list.runtimeType}');
+        ${innerTypeHelper.isCustom ? _generateCustomListMapping(innerTypeString) : _generatePrimitiveListMapping(innerTypeString)}
+      } catch (e) {
+        throw Exception('Error parsing field "$fieldName" of type "$typeString": \$e');
+      }
+    })(),''';
   }
 
-  DartType _getListInnerType(DartType listType) {
-    if (listType is ParameterizedType && listType.typeArguments.isNotEmpty) {
-      return listType.typeArguments.first;
-    }
-    return listType;
+  String _generateCustomListMapping(String innerTypeString) {
+    return '''return list.map((e) {
+          try {
+            if (e is! Map<String, dynamic>) throw Exception('Expected Map<String, dynamic> but got \${e.runtimeType}');
+            return ${innerTypeString}FromMap(e);
+          } catch (e) {
+            throw Exception('Error parsing list item to $innerTypeString: \$e');
+          }
+        }).toList();''';
   }
 
-  bool _isCustomType(DartType type) {
+  String _generatePrimitiveListMapping(String innerTypeString) {
+    return '''return List<$innerTypeString>.from(list.map((e) {
+          if (e is! $innerTypeString) throw Exception('Expected $innerTypeString but got \${e.runtimeType}');
+          return e;
+        }));''';
+  }
+
+  String _generateCustomTypeParsing() {
+    final cleanType = typeString.replaceFirst('*', '');
+    return '''(() {
+      try {
+        final value = map['$fieldName'];
+        if (value == null) throw Exception('Field is null');
+        if (value is! Map<String, dynamic>) throw Exception('Expected Map<String, dynamic> but got \${value.runtimeType}');
+        return ${cleanType}FromMap(value);
+      } catch (e) {
+        throw Exception('Error parsing field "$fieldName" of type "$typeString": \$e');
+      }
+    })(),''';
+  }
+
+  String _generatePrimitiveParsing() {
+    return '''(() {
+      try {
+        final value = map['$fieldName'];
+        if (value == null) throw Exception('Field is null');
+        if (value is! $typeString) throw Exception('Expected $typeString but got \${value.runtimeType}');
+        return value;
+      } catch (e) {
+        throw Exception('Error parsing field "$fieldName" of type "$typeString": \$e');
+      }
+    })(),''';
+  }
+}
+
+class _TypeHelper {
+  final DartType type;
+
+  _TypeHelper(this.type);
+
+  bool get isList => type.isDartCoreList;
+
+  bool get isCustom {
     final typeStr = type.getDisplayString(withNullability: false);
-    return !_isPrimitiveType(typeStr);
+    return !_isPrimitive(typeStr);
   }
 
-  bool _isPrimitiveType(String type) {
+  DartType get listInnerType {
+    if (type is ParameterizedType) {
+      final paramType = type as ParameterizedType;
+      if (paramType.typeArguments.isNotEmpty) {
+        return paramType.typeArguments.first;
+      }
+    }
+    return type;
+  }
+
+  static bool _isPrimitive(String type) {
     const primitives = {
       'int',
       'double',
