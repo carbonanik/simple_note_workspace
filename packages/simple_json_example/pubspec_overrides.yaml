@@ -1,0 +1,6 @@
+# melos_managed_dependency_overrides: simple_json_annotation,simple_json_generator
+dependency_overrides:
+  simple_json_annotation:
+    path: ../simple_json_annotation
+  simple_json_generator:
+    path: ../simple_json_generator

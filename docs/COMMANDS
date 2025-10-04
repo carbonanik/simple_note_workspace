@@ -16,6 +16,6 @@ export PATH="$PATH:$PUB_CACHE/bin"
 > fvm flutter create --template=package packages/simple_state
 # Create a new flutter package
 
-
+> melos exec --scope="simple_json_generator" -- flutter pub get
 
 PROPERLY WORKING ON FLUTTER VERSION 3.35.3
