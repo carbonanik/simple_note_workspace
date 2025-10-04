@@ -1,0 +1,14 @@
+targets:
+  $default:
+    builders:
+      simple_json_generator|json_generator:
+        enabled: true
+
+builders:
+  json_generator:
+    target: ":simple_json_generator"
+    import: "package:simple_json_generator/simple_json_generator.dart"
+    builder_factories: ["generateJsonClass"]
+    build_extensions: { ".dart": [".g.dart"] }
+    auto_apply: dependents
+    build_to: source

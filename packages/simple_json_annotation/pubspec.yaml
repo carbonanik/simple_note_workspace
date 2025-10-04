@@ -1,4 +1,4 @@
-name: simple_http
+name: simple_json_annotation
 description: "A new Flutter package project."
 version: 0.0.1
 homepage:
@@ -10,7 +10,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  http: ^0.13.6
 
 dev_dependencies:
   flutter_test:
