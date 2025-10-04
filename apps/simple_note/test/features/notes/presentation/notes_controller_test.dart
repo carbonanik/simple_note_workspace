@@ -70,7 +70,7 @@ class MockNotesRepository implements NotesRepository {
   }
 
   @override
-  Future<void> deleteNote(String id) async {
+  Future<void> deleteNote(int id) async {
     await _simulateDelay();
     _checkError();
     final index = _notes.indexWhere((n) => n.id == id);
@@ -82,7 +82,7 @@ class MockNotesRepository implements NotesRepository {
   }
 
   @override
-  Future<NoteEntity?> getNoteById(String id) async {
+  Future<NoteEntity?> getNoteById(int id) async {
     await _simulateDelay();
     _checkError();
     try {
@@ -119,7 +119,7 @@ void main() {
     test('loads notes successfully', () async {
       // Arrange
       final testNotes = [
-        NoteEntity(id: '1', title: 'Test Note', content: 'Test Content'),
+        NoteEntity(id: 1, title: 'Test Note', content: 'Test Content'),
       ];
       mockRepository.setNotes(testNotes);
 
@@ -136,7 +136,7 @@ void main() {
     test('shows loading state when loading notes', () async {
       // Arrange
       final note = NoteEntity(
-        id: '1',
+        id: 1,
         title: 'Test Note',
         content: 'Test Content',
       );
@@ -172,7 +172,7 @@ void main() {
       // Arrange
       mockRepository.setNotes([]);
       final newNote = NoteEntity(
-        id: '2',
+        id: 2,
         title: 'New Note',
         content: 'New Content',
       );
@@ -193,7 +193,7 @@ void main() {
       mockRepository.setShouldThrowError(true, 'Failed to add note');
 
       final newNote = NoteEntity(
-        id: '2',
+        id: 2,
         title: 'New Note',
         content: 'New Content',
       );
@@ -210,14 +210,14 @@ void main() {
     test('updates note successfully', () async {
       // Arrange
       final initialNote = NoteEntity(
-        id: '1',
+        id: 1,
         title: 'Original',
         content: 'Original Content',
       );
       mockRepository.setNotes([initialNote]);
 
       final updatedNote = NoteEntity(
-        id: '1',
+        id: 1,
         title: 'Updated',
         content: 'Updated Content',
       );
@@ -234,13 +234,13 @@ void main() {
     test('deletes note successfully', () async {
       // Arrange
       final notes = [
-        NoteEntity(id: '1', title: 'Note 1', content: 'Content 1'),
-        NoteEntity(id: '2', title: 'Note 2', content: 'Content 2'),
+        NoteEntity(id: 1, title: 'Note 1', content: 'Content 1'),
+        NoteEntity(id: 2, title: 'Note 2', content: 'Content 2'),
       ];
       mockRepository.setNotes(notes);
 
       // Act
-      await controller.deleteNote('1');
+      await controller.deleteNote(1);
       await Future.delayed(Duration.zero);
 
       // Assert

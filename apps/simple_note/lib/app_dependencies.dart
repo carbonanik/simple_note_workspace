@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:simple_note/features/notes/domain/repositories/in_memory_notes_repository.dart';
+import 'package:simple_note/core/network/api_client.dart';
+import 'package:simple_note/features/notes/data/datasources/remote/notes_remote_data_source.dart';
+import 'package:simple_note/features/notes/domain/repositories/network_note_repository.dart';
 import 'package:simple_note/features/notes/presentation/controllers/notes_controller.dart';
 
 class AppDependencies extends StatefulWidget {
@@ -20,12 +22,16 @@ class AppDependencies extends StatefulWidget {
 }
 
 class _AppDependenciesState extends State<AppDependencies> {
-  late final InMemoryNotesRepository notesRepository;
+  late final ApiClient apiClient;
+  late final NotesRemoteDataSource dataSource;
+  late final NetworkNotesRepository notesRepository;
   late final NotesController notesController;
 
   @override
   void initState() {
-    notesRepository = InMemoryNotesRepository();
+    apiClient = HttpApiClient(baseUrl: 'http://localhost:8000/v1/');
+    dataSource = NotesRemoteDataSourceImpl(apiClient);
+    notesRepository = NetworkNotesRepository(dataSource);
     notesController = NotesController(notesRepository);
     notesController.getNotes();
     super.initState();

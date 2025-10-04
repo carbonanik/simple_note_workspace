@@ -4,7 +4,7 @@ import 'package:simple_note/features/notes/domain/entities/note.dart';
 import 'package:simple_note/features/notes/presentation/pages/note_editor_page.dart';
 
 void main() {
-  final note = NoteEntity(id: '10', title: 'My Note', content: 'Some content');
+  final note = NoteEntity(id: 10, title: 'My Note', content: 'Some content');
 
   testWidgets('NoteEditorPage loads note data into text fields', (
     WidgetTester tester,

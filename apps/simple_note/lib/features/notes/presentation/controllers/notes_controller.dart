@@ -50,7 +50,7 @@ class NotesController extends ChangeNotifier {
     }
   }
 
-  Future<void> deleteNote(String id) async {
+  Future<void> deleteNote(int id) async {
     try {
       await notesRepository.deleteNote(id);
       _notes = await notesRepository.getNotes();
