@@ -29,3 +29,7 @@ git bisect start
 git bisect bad
 git bisect good
 git bisect reset
+
+//
+git config --global user.email "shkhnk@gmail.com"
+git config user.email
