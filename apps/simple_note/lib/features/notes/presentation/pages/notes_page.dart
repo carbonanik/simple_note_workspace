@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:simple_note/app_dependencies.dart';
+import 'package:simple_note/core/di/di.dart';
 import 'package:simple_note/features/notes/domain/entities/note.dart';
+import 'package:simple_note/features/notes/presentation/controllers/notes_controller.dart';
 import 'package:simple_note/features/notes/presentation/pages/note_editor_page.dart';
 
 class NotesPage extends StatelessWidget {
@@ -8,7 +9,7 @@ class NotesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final notesController = AppDependencies.of(context);
+    final notesController = DI().get<NotesController>();
     return Scaffold(
       appBar: AppBar(title: const Text('Notes')),
       body: ListenableBuilder(

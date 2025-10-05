@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:simple_note/app_dependencies.dart';
 import 'package:simple_note/features/notes/presentation/pages/notes_page.dart';
 
 class MyApp extends StatelessWidget {
@@ -12,7 +11,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const AppDependencies(child: NotesPage()),
+      home: NotesPage(),
     );
   }
 }

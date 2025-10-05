@@ -25,6 +25,14 @@ class DI {
     return null;
   }
 
+  T? registerLazy<T>(
+    T Function() factory, {
+    String? key,
+    void Function(T instance)? onDispose,
+  }) {
+    return register<T>(factory, key: key, onDispose: onDispose, isLazy: true);
+  }
+
   T get<T>({String? key}) {
     final mapKey = (key, T);
 
@@ -36,6 +44,36 @@ class DI {
       _instances[mapKey] = instance as Object;
       return instance;
     }
+    throw Exception('No factory found for type $T');
+  }
+
+  T getWithKey<T>(String key) {
+    final mapKey = (key, T);
+
+    if (_instances.containsKey(mapKey)) {
+      return _instances[mapKey] as T;
+    }
+
+    if (_factories.containsKey(mapKey)) {
+      final instance = _factories[mapKey]!() as T;
+      _instances[mapKey] = instance as Object;
+      return instance;
+    }
+
+    final defaultMapKey = (null, T);
+    if (_factories.containsKey(defaultMapKey)) {
+      final instance = _factories[defaultMapKey]!() as T;
+      _instances[mapKey] = instance as Object;
+
+      _factories[mapKey] = _factories[defaultMapKey]!;
+
+      if (_disposers.containsKey(defaultMapKey)) {
+        _disposers[mapKey] = _disposers[defaultMapKey]!;
+      }
+
+      return instance;
+    }
+
     throw Exception('No factory found for type $T');
   }
 
@@ -55,7 +93,11 @@ class DI {
       }
       _instances.remove(mapKey);
     }
-    print("Has disposer ${_disposers.containsKey(mapKey)}");
+  }
+
+  // TODO: reset all keyed instances of the same type
+  void resetAll<T>() {
+    throw UnimplementedError();
   }
 
   void unregister<T>({String? key}) {
@@ -63,6 +105,11 @@ class DI {
     final mapKey = (key, T);
     _factories.remove(mapKey);
     _disposers.remove(mapKey);
+  }
+
+  // TODO: unregister all keyed instances of the same type
+  void unregisterAll<T>() {
+    throw UnimplementedError();
   }
 
   bool isRegistered<T>({String? key}) {
