@@ -1,4 +1,4 @@
-import 'package:simple_note/core/di/di.dart';
+import 'package:simple_note/core/sl/sl.dart';
 import 'package:test/test.dart';
 
 // Test classes
@@ -39,10 +39,10 @@ class Database {
 }
 
 void main() {
-  late DI di;
+  late SL di;
 
   setUp(() {
-    di = DI();
+    di = SL();
     di.dispose(); // Clean up from previous tests
   });
 
@@ -296,10 +296,10 @@ void main() {
 
   group('Singleton Behavior', () {
     test('should maintain singleton across DI() calls', () {
-      final di1 = DI();
+      final di1 = SL();
       di1.register<TestService>(() => TestService('singleton'));
 
-      final di2 = DI();
+      final di2 = SL();
       final service = di2.get<TestService>();
 
       expect(service.id, 'singleton');

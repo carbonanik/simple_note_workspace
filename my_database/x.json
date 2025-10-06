@@ -1,0 +1,39 @@
+{
+    "keyToOffset": {
+        "user1": 171,
+        "user3": 281
+    },
+    "fieldIndexes": {
+        "name": {
+            "Alice": [
+                "user1"
+            ],
+            "Bob": [
+                "user2"
+            ],
+            "Charlie": [
+                "user3"
+            ]
+        },
+        "age": {
+            "30": [
+                "user1",
+                "user3"
+            ],
+            "25": [
+                "user2"
+            ]
+        },
+        "email": {
+            "alice@example.com": [
+                "user1"
+            ],
+            "bob@example.com": [
+                "user2"
+            ],
+            "charlie@example.com": [
+                "user3"
+            ]
+        }
+    }
+}

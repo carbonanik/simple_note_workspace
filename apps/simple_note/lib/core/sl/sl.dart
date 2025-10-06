@@ -1,7 +1,7 @@
-class DI {
-  static final DI _instance = DI._internal();
-  factory DI() => _instance;
-  DI._internal();
+class SL {
+  static final SL _instance = SL._internal();
+  factory SL() => _instance;
+  SL._internal();
 
   final Map<(String?, Type), Function> _factories = {};
   final Map<(String?, Type), Function> _disposers = {};

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:simple_note/core/di/di.dart';
 import 'package:simple_note/features/notes/domain/entities/note.dart';
 import 'package:simple_note/features/notes/presentation/controllers/notes_controller.dart';
+import 'package:simple_note/features/notes/presentation/controllers/state_notifier.dart';
 import 'package:simple_note/features/notes/presentation/pages/note_editor_page.dart';
 
 class NotesPage extends StatelessWidget {
@@ -9,49 +9,76 @@ class NotesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final notesController = DI().get<NotesController>();
     return Scaffold(
       appBar: AppBar(title: const Text('Notes')),
-      body: ListenableBuilder(
-        listenable: notesController,
-        builder: (context, child) {
-          if (notesController.isLoading) {
-            return const Center(
-              key: Key('loading_indicator'),
-              child: CircularProgressIndicator(),
-            );
-          }
-
-          if (notesController.hasError) {
-            return Center(
-              key: const Key('error_widget'),
-              child: Column(
-                children: [
-                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Error: ${notesController.errorMessage}',
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    key: const Key('retry_button'),
-                    onPressed: () => notesController.getNotes(),
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          if (notesController.notes.isEmpty) {
-            return const Center(
-              key: Key('empty_state'),
-              child: Text('No notes yet. Tap + to create one!'),
-            );
-          }
-
-          return NotesGrid(notes: notesController.notes);
+      body: AsyncStateConsumer<NotesController, List<NoteEntity>>(
+        // onSuccess: (context, notes) {
+        //   if (notes.isEmpty) {
+        //     return const Center(
+        //       key: Key('empty_state'),
+        //       child: Text('No notes yet. Tap + to create one!'),
+        //     );
+        //   }
+        //   return NotesGrid(notes: notes);
+        // },
+        // onLoading: (context) {
+        //   return const Center(
+        //     key: Key('loading_indicator'),
+        //     child: CircularProgressIndicator(),
+        //   );
+        // },
+        // onError: (context, error) {
+        //   return Center(
+        //     key: const Key('error_widget'),
+        //     child: Column(
+        //       children: [
+        //         const Icon(Icons.error_outline, size: 48, color: Colors.red),
+        //         const SizedBox(height: 16),
+        //         Text('Error: $error', textAlign: TextAlign.center),
+        //         const SizedBox(height: 16),
+        //         ElevatedButton(
+        //           key: const Key('retry_button'),
+        //           onPressed: () => notesController.getNotes(),
+        //           child: const Text('Retry'),
+        //         ),
+        //       ],
+        //     ),
+        //   );
+        // },
+        builder: (context, data, notifier) {
+          return data.when(
+            success: (value) {
+              return NotesGrid(notes: value);
+            },
+            loading: (_) {
+              return const Center(child: CircularProgressIndicator());
+            },
+            error: (err, _) {
+              return Center(
+                key: const Key('error_widget'),
+                child: Column(
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: Colors.red,
+                    ),
+                    const SizedBox(height: 16),
+                    Text('Error: $err', textAlign: TextAlign.center),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      key: const Key('retry_button'),
+                      onPressed: () => notifier.retry(),
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              );
+            },
+            initial: (_) {
+              return const Center(child: Text('Initializing...'));
+            },
+          );
         },
       ),
       floatingActionButton: FloatingActionButton(
