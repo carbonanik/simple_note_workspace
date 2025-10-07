@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:simple_note/features/notes/domain/entities/note.dart';
 import 'package:simple_note/features/notes/presentation/controllers/notes_controller.dart';
-import 'package:simple_note/features/notes/presentation/controllers/state_notifier.dart';
+import 'package:simple_note/features/notes/presentation/pages/widgets/notes_empty_state.dart';
+import 'package:simple_note/features/notes/presentation/pages/widgets/notes_error_state.dart';
+import 'package:simple_note/features/notes/presentation/pages/widgets/notes_grid.dart';
 import 'package:simple_note/features/notes/presentation/pages/note_editor_page.dart';
+import 'package:simple_note/features/notes/presentation/pages/widgets/notes_loading_state.dart';
+import 'package:simple_state/simple_state.dart';
 
 class NotesPage extends StatelessWidget {
   const NotesPage({super.key});
@@ -12,74 +16,15 @@ class NotesPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Notes')),
       body: AsyncStateConsumer<NotesController, List<NoteEntity>>(
-        // onSuccess: (context, notes) {
-        //   if (notes.isEmpty) {
-        //     return const Center(
-        //       key: Key('empty_state'),
-        //       child: Text('No notes yet. Tap + to create one!'),
-        //     );
-        //   }
-        //   return NotesGrid(notes: notes);
-        // },
-        // onLoading: (context) {
-        //   return const Center(
-        //     key: Key('loading_indicator'),
-        //     child: CircularProgressIndicator(),
-        //   );
-        // },
-        // onError: (context, error) {
-        //   return Center(
-        //     key: const Key('error_widget'),
-        //     child: Column(
-        //       children: [
-        //         const Icon(Icons.error_outline, size: 48, color: Colors.red),
-        //         const SizedBox(height: 16),
-        //         Text('Error: $error', textAlign: TextAlign.center),
-        //         const SizedBox(height: 16),
-        //         ElevatedButton(
-        //           key: const Key('retry_button'),
-        //           onPressed: () => notesController.getNotes(),
-        //           child: const Text('Retry'),
-        //         ),
-        //       ],
-        //     ),
-        //   );
-        // },
-        builder: (context, data, notifier) {
-          return data.when(
-            success: (value) {
-              return NotesGrid(notes: value);
-            },
-            loading: (_) {
-              return const Center(child: CircularProgressIndicator());
-            },
-            error: (err, _) {
-              return Center(
-                key: const Key('error_widget'),
-                child: Column(
-                  children: [
-                    const Icon(
-                      Icons.error_outline,
-                      size: 48,
-                      color: Colors.red,
-                    ),
-                    const SizedBox(height: 16),
-                    Text('Error: $err', textAlign: TextAlign.center),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      key: const Key('retry_button'),
-                      onPressed: () => notifier.retry(),
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              );
-            },
-            initial: (_) {
-              return const Center(child: Text('Initializing...'));
-            },
-          );
+        onSuccess: (context, notes, notifier) {
+          if (notes.isEmpty) {
+            return const NotesEmptyState();
+          }
+          return NotesGrid(notes: notes);
         },
+        onLoading: (_, __) => const NotesLoadingState(),
+        onError: (_, error, notifier) =>
+            NotesErrorState(error: error, onRetry: notifier.reload),
       ),
       floatingActionButton: FloatingActionButton(
         key: const Key('add_note_fab'),
@@ -90,82 +35,6 @@ class NotesPage extends StatelessWidget {
             MaterialPageRoute(builder: (context) => const NoteEditorPage()),
           );
         },
-      ),
-    );
-  }
-}
-
-class NotesGrid extends StatelessWidget {
-  final List<NoteEntity> notes;
-
-  const NotesGrid({super.key, required this.notes});
-
-  @override
-  Widget build(BuildContext context) {
-    return GridView.builder(
-      key: const Key('notes_grid'),
-      padding: const EdgeInsets.all(8),
-      itemCount: notes.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-        childAspectRatio: 1,
-      ),
-      itemBuilder: (context, index) {
-        final note = notes[index];
-        return NoteCard(note: note, index: index);
-      },
-    );
-  }
-}
-
-class NoteCard extends StatelessWidget {
-  final NoteEntity note;
-  final int index;
-
-  const NoteCard({super.key, required this.note, required this.index});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      child: InkWell(
-        key: Key('note_tile_$index'),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => NoteEditorPage(note: note)),
-          );
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                note.title,
-                key: Key('note_title_$index'),
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 8),
-              Expanded(
-                child: Text(
-                  note.content,
-                  key: Key('note_content_$index'),
-                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                  maxLines: 5,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:simple_note/core/sl/sl.dart';
 import 'package:simple_note/features/notes/presentation/controllers/notes_controller.dart';
-import 'package:simple_note/features/notes/presentation/controllers/state_notifier.dart';
 import 'package:simple_note/features/notes/presentation/pages/notes_page.dart';
+import 'package:simple_state/simple_state.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

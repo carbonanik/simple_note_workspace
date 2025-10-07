@@ -1,12 +1,12 @@
 import 'package:simple_note/core/network/api_client.dart';
 import 'package:simple_note/core/network/api_response.dart';
-import 'package:simple_note/features/notes/data/datasources/remote/note_model.dart';
+import 'package:simple_note/features/notes/data/models/note_dto.dart';
 
 abstract interface class NotesRemoteDataSource {
-  Future<List<NoteModel>> getNotes();
-  Future<NoteModel> getNoteById(int id);
-  Future<NoteModel> createNote(NoteModel note);
-  Future<NoteModel> updateNote(int id, NoteModel note);
+  Future<List<NoteDto>> getNotes();
+  Future<NoteDto> getNoteById(int id);
+  Future<NoteDto> createNote(NoteDto note);
+  Future<NoteDto> updateNote(int id, NoteDto note);
   Future<void> deleteNote(int id);
 }
 
@@ -16,14 +16,14 @@ class NotesRemoteDataSourceImpl implements NotesRemoteDataSource {
   NotesRemoteDataSourceImpl(this.apiClient);
 
   @override
-  Future<List<NoteModel>> getNotes() async {
+  Future<List<NoteDto>> getNotes() async {
     try {
-      final response = await apiClient.get<ApiResponse<List<NoteModel>>>(
+      final response = await apiClient.get<ApiResponse<List<NoteDto>>>(
         '/notes/',
         fromJson: (value) {
           return ApiResponse.fromJson(value, (data) {
             return (data as List)
-                .map((item) => NoteModel.fromJson(item))
+                .map((item) => NoteDto.fromJson(item))
                 .toList();
           });
         },
@@ -35,11 +35,11 @@ class NotesRemoteDataSourceImpl implements NotesRemoteDataSource {
   }
 
   @override
-  Future<NoteModel> getNoteById(int id) async {
+  Future<NoteDto> getNoteById(int id) async {
     try {
-      final response = await apiClient.get<NoteModel>(
+      final response = await apiClient.get<NoteDto>(
         '/notes/$id',
-        fromJson: NoteModel.fromJson,
+        fromJson: NoteDto.fromJson,
       );
       return response;
     } catch (e) {
@@ -48,12 +48,12 @@ class NotesRemoteDataSourceImpl implements NotesRemoteDataSource {
   }
 
   @override
-  Future<NoteModel> createNote(NoteModel note) async {
+  Future<NoteDto> createNote(NoteDto note) async {
     try {
-      final response = await apiClient.post<NoteModel>(
+      final response = await apiClient.post<NoteDto>(
         '/notes/',
         body: note.toCreateJson(),
-        fromJson: NoteModel.fromJson,
+        fromJson: NoteDto.fromJson,
       );
       return response;
     } catch (e) {
@@ -62,12 +62,12 @@ class NotesRemoteDataSourceImpl implements NotesRemoteDataSource {
   }
 
   @override
-  Future<NoteModel> updateNote(int id, NoteModel note) async {
+  Future<NoteDto> updateNote(int id, NoteDto note) async {
     try {
-      final response = await apiClient.put<NoteModel>(
+      final response = await apiClient.put<NoteDto>(
         '/notes/$id',
         body: note.toJson(),
-        fromJson: NoteModel.fromJson,
+        fromJson: NoteDto.fromJson,
       );
       return response;
     } catch (e) {

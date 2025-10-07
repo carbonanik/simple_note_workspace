@@ -1,4 +1,4 @@
-import 'package:simple_note/features/notes/data/datasources/remote/note_model.dart';
+import 'package:simple_note/features/notes/data/models/note_dto.dart';
 import 'package:simple_note/features/notes/data/datasources/remote/notes_remote_data_source.dart';
 import 'package:simple_note/features/notes/domain/entities/note.dart';
 import 'package:simple_note/features/notes/domain/repositories/notes_repository.dart';
@@ -9,7 +9,7 @@ class NetworkNotesRepository implements NotesRepository {
   NetworkNotesRepository(this.dataSource);
   @override
   Future<void> addNote(NoteEntity note) async {
-    dataSource.createNote(NoteModel.fromEntity(note));
+    dataSource.createNote(NoteDto.fromEntity(note));
   }
 
   @override
@@ -31,6 +31,6 @@ class NetworkNotesRepository implements NotesRepository {
 
   @override
   Future<void> updateNote(NoteEntity note) async {
-    await dataSource.updateNote(note.id, NoteModel.fromEntity(note));
+    await dataSource.updateNote(note.id, NoteDto.fromEntity(note));
   }
 }
