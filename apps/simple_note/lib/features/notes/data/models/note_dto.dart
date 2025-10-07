@@ -15,6 +15,10 @@ class NoteDto {
     this.updatedAt,
   });
 
+  static List<NoteDto> fromJsonList(List<Map<String, dynamic>> jsonList) {
+    return jsonList.map((json) => NoteDto.fromJson(json)).toList();
+  }
+
   factory NoteDto.fromJson(Map<String, dynamic> json) {
     return NoteDto(
       id: json['id'] as int?,

@@ -15,7 +15,7 @@ class NetworkNotesRepository implements NotesRepository {
   @override
   Future<List<NoteEntity>> getNotes() async {
     final notes = await dataSource.getNotes();
-    return notes.map((note) => note.toEntity()).toList();
+    return notes.data?.map((note) => note.toEntity()).toList() ?? [];
   }
 
   @override
@@ -26,7 +26,7 @@ class NetworkNotesRepository implements NotesRepository {
   @override
   Future<NoteEntity?> getNoteById(int id) async {
     final note = await dataSource.getNoteById(id);
-    return note.toEntity();
+    return note.data?.toEntity();
   }
 
   @override

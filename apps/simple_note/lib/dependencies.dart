@@ -10,7 +10,10 @@ void initializedDependencies() {
 
   // Data Source
   di.registerLazy<ApiClient>(
-    () => HttpApiClient(baseUrl: AppConstants.baseUrl),
+    () => HttpApiClient(
+      baseUrl: AppConstants.baseUrl,
+      responseAdapter: WrappedResponseAdapter(),
+    ),
   );
   di.registerLazy<NotesRemoteDataSource>(
     () => NotesRemoteDataSourceImpl(di.get()),
