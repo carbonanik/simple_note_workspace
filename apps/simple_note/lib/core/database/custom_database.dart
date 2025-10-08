@@ -370,6 +370,13 @@ void main() async {
     'email': 'charlie@example.com',
   });
 
+  for (var i = 0; i < 1000; i++) {
+    await usersBox.put('user$i', {
+      'name': 'User $i',
+      'age': 30,
+      'email': 'user$i@example.com',
+    });
+  }
   // Retrieve by key
   final user = await usersBox.get('user1');
   print('Retrieved: $user');

@@ -8,11 +8,15 @@ import 'package:simple_note/features/notes/domain/repositories/notes_repository.
 void initializedDependencies() {
   final di = SL();
 
+  // Config
+  di.register(() => AppConstants.baseUrl, key: 'baseUrl');
+  di.register<ResponseAdapter>(() => WrappedResponseAdapter());
+
   // Data Source
   di.registerLazy<ApiClient>(
     () => HttpApiClient(
-      baseUrl: AppConstants.baseUrl,
-      responseAdapter: WrappedResponseAdapter(),
+      baseUrl: di.get(key: 'baseUrl'),
+      responseAdapter: di.get(),
     ),
   );
   di.registerLazy<NotesRemoteDataSource>(
@@ -21,7 +25,4 @@ void initializedDependencies() {
 
   // Repository
   di.registerLazy<NotesRepository>(() => InMemoryNotesRepository());
-
-  // Controller
-  // di.registerLazy<NotesController>(() => NotesController(di.get()));
 }
