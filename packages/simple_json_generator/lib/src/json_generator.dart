@@ -257,6 +257,8 @@ class _TypeHelper {
     return !_isPrimitive(typeStr);
   }
 
+  bool get isEnum => type.isDartCoreEnum;
+
   DartType get listInnerType {
     if (type is ParameterizedType) {
       final paramType = type as ParameterizedType;

@@ -7,12 +7,12 @@ class Order {
   String name;
   String id;
   List<Product> products;
-  double amount;
+  double? amount;
   Order({
     required this.name,
     required this.id,
     required this.products,
-    required this.amount,
+    this.amount,
   });
 
   factory Order.fromMap(Map<String, dynamic> json) => OrderFromMap(json);
