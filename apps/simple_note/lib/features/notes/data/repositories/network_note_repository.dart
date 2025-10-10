@@ -1,4 +1,4 @@
-import 'package:simple_note/features/notes/data/datasources/remote/note_model.dart';
+import 'package:simple_note/features/notes/data/models/note_dto.dart';
 import 'package:simple_note/features/notes/data/datasources/remote/notes_remote_data_source.dart';
 import 'package:simple_note/features/notes/domain/entities/note.dart';
 import 'package:simple_note/features/notes/domain/repositories/notes_repository.dart';
@@ -9,13 +9,13 @@ class NetworkNotesRepository implements NotesRepository {
   NetworkNotesRepository(this.dataSource);
   @override
   Future<void> addNote(NoteEntity note) async {
-    dataSource.createNote(NoteModel.fromEntity(note));
+    dataSource.createNote(NoteDto.fromEntity(note));
   }
 
   @override
   Future<List<NoteEntity>> getNotes() async {
     final notes = await dataSource.getNotes();
-    return notes.map((note) => note.toEntity()).toList();
+    return notes.data?.map((note) => note.toEntity()).toList() ?? [];
   }
 
   @override
@@ -26,11 +26,11 @@ class NetworkNotesRepository implements NotesRepository {
   @override
   Future<NoteEntity?> getNoteById(int id) async {
     final note = await dataSource.getNoteById(id);
-    return note.toEntity();
+    return note.data?.toEntity();
   }
 
   @override
   Future<void> updateNote(NoteEntity note) async {
-    await dataSource.updateNote(note.id, NoteModel.fromEntity(note));
+    await dataSource.updateNote(note.id, NoteDto.fromEntity(note));
   }
 }

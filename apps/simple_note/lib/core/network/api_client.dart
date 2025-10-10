@@ -1,6 +1,15 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+// Generic API Response wrapper
+class ApiResponse<T> {
+  final T? data;
+  final String? message;
+  final Map<String, dynamic>? meta;
+
+  ApiResponse({this.data, this.message, this.meta});
+}
+
 class ApiException implements Exception {
   final String message;
   final int? statusCode;
@@ -12,77 +21,174 @@ class ApiException implements Exception {
   String toString() => 'ApiException: $message (Status: $statusCode)';
 }
 
-// ============================================================================
-// Response Parser Type Definition
-// ============================================================================
+// Abstract response adapter interface
+abstract class ResponseAdapter {
+  ApiResponse<T> adapt<T>(
+    Map<String, dynamic> json,
+    T Function(dynamic)? fromJson,
+  );
 
-/// Function type for parsing API responses
-/// Takes raw JSON and a data parser, returns ApiResponse<T>
-// typedef ResponseParser =
-//     T Function<T>(Map<String, dynamic> json, T Function(dynamic) fromJsonT);
-
-/// Default parser for ApiResponse structure
-// ApiResponse<T> defaultResponseParser<T>(
-//   Map<String, dynamic> json,
-//   T Function(dynamic) fromJsonT,
-// ) {
-//   return ApiResponse<T>.fromJson(json, fromJsonT);
-// }
-
-// /// Alternative: Direct data parser (no wrapper)
-// T directDataParser<T>(
-//   Map<String, dynamic> json,
-//   T Function(dynamic) fromJsonT,
-// ) {
-//   return fromJsonT(json);
-// }
-
-abstract interface class ApiClient {
-  Future<T> get<T>(
-    String path, {
-    Map<String, String>? headers,
-    T Function(Map<String, dynamic>)? fromJson,
-  });
-
-  Future<T> post<T>(
-    String path, {
-    Map<String, dynamic>? body,
-    Map<String, String>? headers,
-    T Function(Map<String, dynamic>)? fromJson,
-  });
-
-  Future<T> put<T>(
-    String path, {
-    Map<String, dynamic>? body,
-    Map<String, String>? headers,
-    T Function(Map<String, dynamic>)? fromJson,
-  });
-
-  Future<void> delete(String path, {Map<String, String>? headers});
+  String? extractErrorMessage(Map<String, dynamic> json);
 }
 
-// TODO: Add support for interceptors
+// Adapter for {data, message, meta} pattern
+class WrappedResponseAdapter implements ResponseAdapter {
+  final String dataKey;
+  final String messageKey;
+  final String metaKey;
+
+  WrappedResponseAdapter({
+    this.dataKey = 'data',
+    this.messageKey = 'message',
+    this.metaKey = 'meta',
+  });
+
+  @override
+  ApiResponse<T> adapt<T>(
+    Map<String, dynamic> json,
+    T Function(dynamic)? fromJson,
+  ) {
+    final rawData = json[dataKey];
+    T? parsedData;
+
+    if (fromJson != null && rawData != null) {
+      if (rawData is List) {
+        parsedData = rawData.map((item) => fromJson(item)).toList() as T;
+      } else {
+        parsedData = fromJson(rawData);
+      }
+    } else {
+      parsedData = rawData as T?;
+    }
+
+    return ApiResponse<T>(
+      data: parsedData,
+      message: json[messageKey] as String?,
+      meta: json[metaKey] as Map<String, dynamic>?,
+    );
+  }
+
+  @override
+  String? extractErrorMessage(Map<String, dynamic> json) {
+    return json[messageKey] as String? ?? json['detail'] as String?;
+  }
+}
+
+// Adapter for direct response (no wrapper)
+class DirectResponseAdapter implements ResponseAdapter {
+  @override
+  ApiResponse<T> adapt<T>(
+    Map<String, dynamic> json,
+    T Function(dynamic)? fromJson,
+  ) {
+    T? parsedData;
+
+    if (fromJson != null) {
+      parsedData = fromJson(json);
+    } else {
+      parsedData = json as T;
+    }
+
+    return ApiResponse<T>(data: parsedData);
+  }
+
+  @override
+  String? extractErrorMessage(Map<String, dynamic> json) {
+    return json['error'] as String? ??
+        json['message'] as String? ??
+        json['detail'] as String?;
+  }
+}
+
+// Adapter for custom patterns like {success, result, error}
+class CustomResponseAdapter implements ResponseAdapter {
+  final String dataKey;
+  final String? errorKey;
+  final String? messageKey;
+
+  CustomResponseAdapter({
+    required this.dataKey,
+    this.errorKey,
+    this.messageKey,
+  });
+
+  @override
+  ApiResponse<T> adapt<T>(
+    Map<String, dynamic> json,
+    T Function(dynamic)? fromJson,
+  ) {
+    final rawData = json[dataKey];
+    T? parsedData;
+
+    if (fromJson != null && rawData != null) {
+      if (rawData is List) {
+        parsedData = rawData.map((item) => fromJson(item)).toList() as T;
+      } else {
+        parsedData = fromJson(rawData);
+      }
+    } else {
+      parsedData = rawData as T?;
+    }
+
+    return ApiResponse<T>(
+      data: parsedData,
+      message: messageKey != null ? json[messageKey] as String? : null,
+    );
+  }
+
+  @override
+  String? extractErrorMessage(Map<String, dynamic> json) {
+    return (errorKey != null ? json[errorKey] as String? : null) ??
+        json['message'] as String? ??
+        json['detail'] as String?;
+  }
+}
+
+abstract interface class ApiClient {
+  Future<ApiResponse<T>> get<T>(
+    String path, {
+    Map<String, String>? headers,
+    T Function(dynamic)? fromJson,
+  });
+
+  Future<ApiResponse<T>> post<T>(
+    String path, {
+    Map<String, dynamic>? body,
+    Map<String, String>? headers,
+    T Function(dynamic)? fromJson,
+  });
+
+  Future<ApiResponse<T>> put<T>(
+    String path, {
+    Map<String, dynamic>? body,
+    Map<String, String>? headers,
+    T Function(dynamic)? fromJson,
+  });
+
+  Future<ApiResponse<void>> delete(String path, {Map<String, String>? headers});
+}
+
 class HttpApiClient implements ApiClient {
   final String baseUrl;
   final http.Client client;
   final Map<String, String> defaultHeaders;
+  final ResponseAdapter responseAdapter;
 
   HttpApiClient({
     required this.baseUrl,
     http.Client? client,
     Map<String, String>? defaultHeaders,
-    Function? responseParser,
+    ResponseAdapter? responseAdapter,
   }) : client = client ?? http.Client(),
        defaultHeaders =
            defaultHeaders ??
-           {'Content-Type': 'application/json', 'Accept': 'application/json'};
+           {'Content-Type': 'application/json', 'Accept': 'application/json'},
+       responseAdapter = responseAdapter ?? DirectResponseAdapter();
 
   Map<String, String> _mergeHeaders(Map<String, String>? headers) {
     return {...defaultHeaders, ...?headers};
   }
 
-  // TODO: Add support for query parameters
-  // TODO: Replace Uri.parse with Uri()
   Uri _buildUri(String path) {
     final cleanPath = path.startsWith('/') ? path.substring(1) : path;
     final cleanBaseUrl = baseUrl.endsWith('/')
@@ -91,40 +197,43 @@ class HttpApiClient implements ApiClient {
     return Uri.parse('$cleanBaseUrl/$cleanPath');
   }
 
-  Future<T> _handleResponse<T>(
+  Future<ApiResponse<T>> _handleResponse<T>(
     http.Response response,
-    T Function(Map<String, dynamic>)? fromJson,
+    T Function(dynamic)? fromJson,
   ) async {
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      // TODO: Cast will throw if response.body is null
       if (response.body.isEmpty) {
-        return null as T;
+        return ApiResponse<T>();
       }
 
       final jsonData = json.decode(response.body);
 
-      if (fromJson != null) {
-        if (jsonData is List) {
-          // Handle list responses
-          return jsonData
-                  .map((item) => fromJson(item as Map<String, dynamic>))
-                  .toList()
-              as T;
+      // Handle list responses directly (without wrapper)
+      if (jsonData is List) {
+        T? parsedData;
+        if (fromJson != null) {
+          parsedData = jsonData.map((item) => fromJson(item)).toList() as T;
         } else {
-          // Handle single object responses
-          return fromJson(jsonData as Map<String, dynamic>);
+          parsedData = jsonData as T;
         }
+        return ApiResponse<T>(data: parsedData);
       }
 
-      return jsonData as T;
+      // Use adapter for object responses
+      return responseAdapter.adapt<T>(
+        jsonData as Map<String, dynamic>,
+        fromJson,
+      );
     }
 
     // Handle errors
     String errorMessage = 'Request failed';
     try {
       final errorData = json.decode(response.body);
-      // TODO : Add better error handling
-      errorMessage = errorData['detail'] ?? errorMessage;
+      if (errorData is Map<String, dynamic>) {
+        errorMessage =
+            responseAdapter.extractErrorMessage(errorData) ?? errorMessage;
+      }
     } catch (_) {
       errorMessage = response.body.isNotEmpty
           ? response.body
@@ -135,10 +244,10 @@ class HttpApiClient implements ApiClient {
   }
 
   @override
-  Future<T> get<T>(
+  Future<ApiResponse<T>> get<T>(
     String path, {
     Map<String, String>? headers,
-    T Function(Map<String, dynamic>)? fromJson,
+    T Function(dynamic)? fromJson,
   }) async {
     try {
       final response = await client.get(
@@ -153,11 +262,11 @@ class HttpApiClient implements ApiClient {
   }
 
   @override
-  Future<T> post<T>(
+  Future<ApiResponse<T>> post<T>(
     String path, {
     Map<String, dynamic>? body,
     Map<String, String>? headers,
-    T Function(Map<String, dynamic>)? fromJson,
+    T Function(dynamic)? fromJson,
   }) async {
     try {
       final response = await client.post(
@@ -173,11 +282,11 @@ class HttpApiClient implements ApiClient {
   }
 
   @override
-  Future<T> put<T>(
+  Future<ApiResponse<T>> put<T>(
     String path, {
     Map<String, dynamic>? body,
     Map<String, String>? headers,
-    T Function(Map<String, dynamic>)? fromJson,
+    T Function(dynamic)? fromJson,
   }) async {
     try {
       final response = await client.put(
@@ -193,7 +302,10 @@ class HttpApiClient implements ApiClient {
   }
 
   @override
-  Future<void> delete(String path, {Map<String, String>? headers}) async {
+  Future<ApiResponse<void>> delete(
+    String path, {
+    Map<String, String>? headers,
+  }) async {
     try {
       final response = await client.delete(
         _buildUri(path),
@@ -201,13 +313,24 @@ class HttpApiClient implements ApiClient {
       );
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        return;
+        if (response.body.isEmpty) {
+          return ApiResponse<void>();
+        }
+
+        final jsonData = json.decode(response.body);
+        if (jsonData is Map<String, dynamic>) {
+          return responseAdapter.adapt<void>(jsonData, null);
+        }
+        return ApiResponse<void>();
       }
 
       String errorMessage = 'Delete failed';
       try {
         final errorData = json.decode(response.body);
-        errorMessage = errorData['detail'] ?? errorMessage;
+        if (errorData is Map<String, dynamic>) {
+          errorMessage =
+              responseAdapter.extractErrorMessage(errorData) ?? errorMessage;
+        }
       } catch (_) {}
 
       throw ApiException(errorMessage, statusCode: response.statusCode);
@@ -217,3 +340,56 @@ class HttpApiClient implements ApiClient {
     }
   }
 }
+
+// ============= USAGE EXAMPLES =============
+
+/*
+// Example 1: Project with {data, message, meta} pattern
+final wrappedClient = HttpApiClient(
+  baseUrl: 'https://api.example.com',
+  responseAdapter: WrappedResponseAdapter(),
+);
+
+final response = await wrappedClient.get<User>(
+  '/users/1',
+  fromJson: (json) => User.fromJson(json as Map<String, dynamic>),
+);
+print(response.data);     // User object
+print(response.message);  // "Success"
+print(response.meta);     // {page: 1, total: 100}
+
+
+// Example 2: Project with direct response (no wrapper)
+final directClient = HttpApiClient(
+  baseUrl: 'https://api.another.com',
+  responseAdapter: DirectResponseAdapter(),
+);
+
+final response2 = await directClient.get<User>(
+  '/users/1',
+  fromJson: (json) => User.fromJson(json as Map<String, dynamic>),
+);
+print(response2.data);  // User object directly
+
+
+// Example 3: Custom pattern like {success, result, error}
+final customClient = HttpApiClient(
+  baseUrl: 'https://api.custom.com',
+  responseAdapter: CustomResponseAdapter(
+    dataKey: 'result',      // data is in 'result' field
+    errorKey: 'error',      // errors in 'error' field
+    messageKey: 'status',   // message in 'status' field
+  ),
+);
+
+
+// Example 4: Different keys like {payload, msg, metadata}
+final anotherClient = HttpApiClient(
+  baseUrl: 'https://api.other.com',
+  responseAdapter: WrappedResponseAdapter(
+    dataKey: 'payload',
+    messageKey: 'msg',
+    metaKey: 'metadata',
+  ),
+);
+*/
