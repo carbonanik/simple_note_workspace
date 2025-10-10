@@ -18,7 +18,4 @@ void initializedDependencies() {
 
   // Repository
   di.registerLazy<NotesRepository>(() => InMemoryNotesRepository());
-
-  // Controller
-  // di.registerLazy<NotesController>(() => NotesController(di.get()));
 }
