@@ -52,11 +52,7 @@ class WrappedResponseAdapter implements ResponseAdapter {
     T? parsedData;
 
     if (fromJson != null && rawData != null) {
-      if (rawData is List) {
-        parsedData = rawData.map((item) => fromJson(item)).toList() as T;
-      } else {
-        parsedData = fromJson(rawData);
-      }
+      parsedData = fromJson(rawData);
     } else {
       parsedData = rawData as T?;
     }
@@ -208,22 +204,14 @@ class HttpApiClient implements ApiClient {
 
       final jsonData = json.decode(response.body);
 
-      // Handle list responses directly (without wrapper)
-      if (jsonData is List) {
-        T? parsedData;
-        if (fromJson != null) {
-          parsedData = jsonData.map((item) => fromJson(item)).toList() as T;
-        } else {
-          parsedData = jsonData as T;
-        }
-        return ApiResponse<T>(data: parsedData);
+      if (jsonData is! Map<String, dynamic>) {
+        throw ApiException(
+          'Invalid response format: API response is not a map',
+        );
       }
 
       // Use adapter for object responses
-      return responseAdapter.adapt<T>(
-        jsonData as Map<String, dynamic>,
-        fromJson,
-      );
+      return responseAdapter.adapt<T>(jsonData, fromJson);
     }
 
     // Handle errors
@@ -340,56 +328,3 @@ class HttpApiClient implements ApiClient {
     }
   }
 }
-
-// ============= USAGE EXAMPLES =============
-
-/*
-// Example 1: Project with {data, message, meta} pattern
-final wrappedClient = HttpApiClient(
-  baseUrl: 'https://api.example.com',
-  responseAdapter: WrappedResponseAdapter(),
-);
-
-final response = await wrappedClient.get<User>(
-  '/users/1',
-  fromJson: (json) => User.fromJson(json as Map<String, dynamic>),
-);
-print(response.data);     // User object
-print(response.message);  // "Success"
-print(response.meta);     // {page: 1, total: 100}
-
-
-// Example 2: Project with direct response (no wrapper)
-final directClient = HttpApiClient(
-  baseUrl: 'https://api.another.com',
-  responseAdapter: DirectResponseAdapter(),
-);
-
-final response2 = await directClient.get<User>(
-  '/users/1',
-  fromJson: (json) => User.fromJson(json as Map<String, dynamic>),
-);
-print(response2.data);  // User object directly
-
-
-// Example 3: Custom pattern like {success, result, error}
-final customClient = HttpApiClient(
-  baseUrl: 'https://api.custom.com',
-  responseAdapter: CustomResponseAdapter(
-    dataKey: 'result',      // data is in 'result' field
-    errorKey: 'error',      // errors in 'error' field
-    messageKey: 'status',   // message in 'status' field
-  ),
-);
-
-
-// Example 4: Different keys like {payload, msg, metadata}
-final anotherClient = HttpApiClient(
-  baseUrl: 'https://api.other.com',
-  responseAdapter: WrappedResponseAdapter(
-    dataKey: 'payload',
-    messageKey: 'msg',
-    metaKey: 'metadata',
-  ),
-);
-*/
