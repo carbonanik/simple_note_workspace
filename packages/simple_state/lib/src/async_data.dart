@@ -19,7 +19,7 @@ class AsyncData<T> {
     required R Function(T? value) initial,
     required R Function(T? value) loading,
     required R Function(T value) success,
-    required R Function(T? value, Object error) error,
+    required R Function(T? value, Object? errorObj) error,
   }) {
     switch (status) {
       case AsyncStatus.initial:
@@ -29,7 +29,7 @@ class AsyncData<T> {
       case AsyncStatus.success:
         return success(value as T);
       case AsyncStatus.error:
-        return error(value, error);
+        return error(value, this.error);
     }
   }
 
@@ -37,7 +37,7 @@ class AsyncData<T> {
     R Function(T? value)? initial,
     R Function(T? value)? loading,
     R Function(T value)? success,
-    R Function(T? value, Object error)? error,
+    R Function(T? value, Object? errorObj)? error,
     required R Function(T? value) orElse,
   }) {
     switch (status) {
@@ -48,7 +48,7 @@ class AsyncData<T> {
       case AsyncStatus.success:
         return success?.call(value as T) ?? orElse(value);
       case AsyncStatus.error:
-        return error?.call(value, error) ?? orElse(value);
+        return error?.call(value, this.error) ?? orElse(value);
     }
   }
 

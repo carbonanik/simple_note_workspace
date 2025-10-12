@@ -7,7 +7,7 @@ class AsyncStateConsumer<T extends AsyncStateNotifier<D>, D>
     extends StatelessWidget {
   final Widget Function(BuildContext context, D value, T notifier)? onSuccess;
   final Widget Function(BuildContext context, T notifier)? onLoading;
-  final Widget Function(BuildContext context, Object error, T notifier)?
+  final Widget Function(BuildContext context, Object? error, T notifier)?
   onError;
   final Widget Function(BuildContext context, T notifier)? onInitial;
   final Widget Function(BuildContext context, AsyncData<D> data, T notifier)?
@@ -41,8 +41,8 @@ class AsyncStateConsumer<T extends AsyncStateNotifier<D>, D>
           onLoading?.call(context, notifier) ??
           const Center(child: CircularProgressIndicator()),
       success: (value) => onSuccess!(context, value!, notifier),
-      error: (err, _) =>
-          onError?.call(context, err!, notifier) ??
+      error: (_, err) =>
+          onError?.call(context, err, notifier) ??
           Center(child: Text('Error: $err')),
     );
   }
