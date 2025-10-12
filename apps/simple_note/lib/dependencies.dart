@@ -2,7 +2,7 @@ import 'package:simple_note/app_constants.dart';
 import 'package:simple_note/core/sl/sl.dart';
 import 'package:simple_note/core/network/api_client.dart';
 import 'package:simple_note/features/notes/data/datasources/remote/notes_remote_data_source.dart';
-import 'package:simple_note/features/notes/data/repositories/in_memory_notes_repository.dart';
+import 'package:simple_note/features/notes/data/repositories/network_note_repository.dart';
 import 'package:simple_note/features/notes/domain/repositories/notes_repository.dart';
 
 void initializedDependencies() {
@@ -16,7 +16,7 @@ void initializedDependencies() {
   di.registerLazy<ApiClient>(
     () => HttpApiClient(
       baseUrl: di.get(key: 'baseUrl'),
-      responseAdapter: di.get(),
+      responseAdapter: di.get<ResponseAdapter>(),
     ),
   );
   di.registerLazy<NotesRemoteDataSource>(
@@ -24,5 +24,5 @@ void initializedDependencies() {
   );
 
   // Repository
-  di.registerLazy<NotesRepository>(() => InMemoryNotesRepository());
+  di.registerLazy<NotesRepository>(() => NetworkNotesRepository(di.get()));
 }

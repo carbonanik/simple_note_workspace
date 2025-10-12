@@ -51,10 +51,11 @@ class MockNotesRepository implements NotesRepository {
   }
 
   @override
-  Future<void> addNote(NoteEntity note) async {
+  Future<int> addNote(NoteEntity note) async {
     await _simulateDelay();
     _checkError();
     _notes.add(note);
+    return note.id!;
   }
 
   @override

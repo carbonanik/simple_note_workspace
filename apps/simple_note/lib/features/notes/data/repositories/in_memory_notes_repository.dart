@@ -9,8 +9,10 @@ class InMemoryNotesRepository implements NotesRepository {
   ];
 
   @override
-  Future<void> addNote(NoteEntity note) async {
-    _notes.add(note);
+  Future<int> addNote(NoteEntity note) async {
+    final noteWithId = note.copyWith(id: _notes.length + 1);
+    _notes.add(noteWithId);
+    return noteWithId.id!;
   }
 
   @override

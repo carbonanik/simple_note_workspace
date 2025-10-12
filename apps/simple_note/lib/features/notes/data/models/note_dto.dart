@@ -15,7 +15,7 @@ class NoteDto {
     this.updatedAt,
   });
 
-  static List<NoteDto> fromJsonList(List<Map<String, dynamic>> jsonList) {
+  static List<NoteDto> fromJsonList(List<dynamic> jsonList) {
     return jsonList.map((json) => NoteDto.fromJson(json)).toList();
   }
 

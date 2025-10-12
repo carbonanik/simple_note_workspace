@@ -7,9 +7,14 @@ class NetworkNotesRepository implements NotesRepository {
   final NotesRemoteDataSource dataSource;
 
   NetworkNotesRepository(this.dataSource);
+
   @override
-  Future<void> addNote(NoteEntity note) async {
-    dataSource.createNote(NoteDto.fromEntity(note));
+  Future<int> addNote(NoteEntity note) async {
+    final newNote = await dataSource.createNote(NoteDto.fromEntity(note));
+    if (newNote.data?.id == null) {
+      throw Exception('Failed to create note');
+    }
+    return newNote.data!.id!;
   }
 
   @override
@@ -31,6 +36,7 @@ class NetworkNotesRepository implements NotesRepository {
 
   @override
   Future<void> updateNote(NoteEntity note) async {
-    await dataSource.updateNote(note.id, NoteDto.fromEntity(note));
+    assert(note.id != null);
+    await dataSource.updateNote(note.id!, NoteDto.fromEntity(note));
   }
 }

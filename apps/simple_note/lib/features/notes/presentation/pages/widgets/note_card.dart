@@ -17,7 +17,9 @@ class NoteCard extends StatelessWidget {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => NoteEditorPage(note: note)),
+            MaterialPageRoute(
+              builder: (context) => NoteEditorFlow(noteId: note.id),
+            ),
           );
         },
         child: Padding(

@@ -24,7 +24,7 @@ class NotesPage extends StatelessWidget {
         },
         onLoading: (_, __) => const NotesLoadingState(),
         onError: (_, error, notifier) =>
-            NotesErrorState(error: error, onRetry: notifier.reload),
+            NotesErrorState(error: error, onRetry: notifier.retry),
       ),
       floatingActionButton: FloatingActionButton(
         key: const Key('add_note_fab'),
@@ -32,7 +32,7 @@ class NotesPage extends StatelessWidget {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const NoteEditorPage()),
+            MaterialPageRoute(builder: (context) => const NoteEditorFlow()),
           );
         },
       ),

@@ -13,4 +13,18 @@ class StateProvider<T extends ChangeNotifier> extends InheritedNotifier {
     assert(provider != null, 'No StateProvider found in context for $T');
     return provider!.notifier as T;
   }
+
+  static T? maybeOf<T extends ChangeNotifier>(BuildContext context) {
+    final provider = context
+        .dependOnInheritedWidgetOfExactType<StateProvider<T>>();
+    return provider?.notifier as T?;
+  }
+}
+
+extension StateReader on BuildContext {
+  T read<T extends ChangeNotifier>() {
+    final provider = getInheritedWidgetOfExactType<StateProvider<T>>();
+    assert(provider != null, 'No StateProvider found in context for $T');
+    return provider!.notifier as T;
+  }
 }

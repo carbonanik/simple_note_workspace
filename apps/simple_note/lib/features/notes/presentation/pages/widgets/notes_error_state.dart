@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class NotesErrorState extends StatelessWidget {
-  final Object error;
+  final Object? error;
   final VoidCallback onRetry;
 
   const NotesErrorState({
@@ -12,6 +12,7 @@ class NotesErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('Error: $error');
     return Center(
       key: const Key('error_widget'),
       child: Column(

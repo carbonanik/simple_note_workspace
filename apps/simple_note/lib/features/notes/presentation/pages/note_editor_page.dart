@@ -1,9 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:simple_note/core/sl/sl.dart';
 import 'package:simple_note/features/notes/domain/entities/note.dart';
+import 'package:simple_note/features/notes/presentation/controllers/note_editor_controller.dart';
+import 'package:simple_note/features/notes/presentation/controllers/notes_controller.dart';
+import 'package:simple_state/simple_state.dart';
+
+class NoteEditorFlow extends StatelessWidget {
+  final int? noteId;
+  const NoteEditorFlow({super.key, this.noteId});
+
+  @override
+  Widget build(BuildContext context) {
+    return StateProvider(
+      notifier: NoteEditorController(SL().get(), noteId: noteId),
+      child: const NoteEditorPage(),
+    );
+  }
+}
 
 class NoteEditorPage extends StatelessWidget {
-  final NoteEntity? note;
-  const NoteEditorPage({this.note, super.key});
+  const NoteEditorPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -12,21 +28,38 @@ class NoteEditorPage extends StatelessWidget {
         title: const Text('Note Editor'),
         actions: [
           IconButton(
-            onPressed: () {
-              // Navigator.push(
-              //   context,
-              //   MaterialPageRoute(builder: (context) => NotesPage()),
-              // );
+            onPressed: () async {
+              try {
+                await context.read<NoteEditorController>().save();
+                if (!context.mounted) return;
+                context.read<NotesController>().reload();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Note saved successfully')),
+                );
+              } catch (e) {
+                debugPrint(e.toString());
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text('Failed to save note')));
+              }
             },
             icon: const Icon(Icons.save),
           ),
         ],
       ),
-      body: Column(
-        children: [
-          TextField(controller: TextEditingController(text: note?.title)),
-          TextField(controller: TextEditingController(text: note?.content)),
-        ],
+      body: AsyncStateConsumer<NoteEditorController, NoteEntity>(
+        builder: (context, note, notifier) {
+          return Form(
+            key: notifier.formKey,
+            child: Column(
+              children: [
+                TextField(controller: notifier.titleController),
+                TextField(controller: notifier.contentController),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
