@@ -28,22 +28,7 @@ class NoteEditorPage extends StatelessWidget {
         title: const Text('Note Editor'),
         actions: [
           IconButton(
-            onPressed: () async {
-              try {
-                await context.read<NoteEditorController>().save();
-                if (!context.mounted) return;
-                context.read<NotesController>().reload();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Note saved successfully')),
-                );
-              } catch (e) {
-                debugPrint(e.toString());
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text('Failed to save note')));
-              }
-            },
+            onPressed: () => _handleSave(context),
             icon: const Icon(Icons.save),
           ),
         ],
@@ -62,5 +47,27 @@ class NoteEditorPage extends StatelessWidget {
         },
       ),
     );
+  }
+
+  void _handleSave(BuildContext context) async {
+    final controller = context.read<NoteEditorController>();
+    if (!controller.validateForm()) return;
+    final result = await controller.save();
+
+    if (!context.mounted) return;
+
+    if (result.isSuccess) {
+      context.read<NotesController>().reload();
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Note saved successfully')));
+    }
+
+    if (result.isError) {
+      debugPrint(result.toString());
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to save note')));
+    }
   }
 }

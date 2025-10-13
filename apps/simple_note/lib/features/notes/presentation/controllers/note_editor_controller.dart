@@ -32,16 +32,22 @@ class NoteEditorController extends AsyncStateNotifier<NoteEntity> {
     return note;
   }
 
-  Future<void> save() async {
-    if (!formKey.currentState!.validate()) return;
+  bool validateForm() => formKey.currentState!.validate();
+
+  Future<Result<void>> save() async {
     final note = state.value!.copyWith(
       title: titleController.text,
       content: contentController.text,
     );
-    if (note.id == null) {
-      await addNote(note);
-    } else {
-      await updateNote(note);
+    try {
+      if (note.id == null) {
+        await addNote(note);
+      } else {
+        await updateNote(note);
+      }
+      return Success(null);
+    } catch (e) {
+      return Error(e.toString());
     }
   }
 
@@ -64,4 +70,24 @@ class NoteEditorController extends AsyncStateNotifier<NoteEntity> {
     contentController.dispose();
     super.dispose();
   }
+}
+
+class Result<T> {
+  const Result();
+
+  get isSuccess => this is Success;
+  get isError => this is Error;
+
+  get successValue => (this as Success).value;
+  get errorMessage => (this as Error).message;
+}
+
+class Success<T> extends Result<T> {
+  final T value;
+  Success(this.value);
+}
+
+class Error<T> extends Result<T> {
+  final String message;
+  Error(this.message);
 }
