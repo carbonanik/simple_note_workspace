@@ -11,6 +11,7 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
   http: any
+  path_provider: any
   simple_state:
     path: ../../packages/simple_state
 
