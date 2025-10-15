@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:simple_note/core/database/custom_database_2.dart';
 import 'package:simple_note/core/sl/sl.dart';
 import 'package:simple_note/features/notes/presentation/controllers/notes_controller.dart';
 import 'package:simple_note/features/notes/presentation/pages/notes_page.dart';
@@ -9,6 +10,8 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    runDatabase();
+
     return StateProvider(
       notifier: NotesController(SL().get()),
       child: MaterialApp(
