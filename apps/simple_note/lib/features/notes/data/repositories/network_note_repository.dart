@@ -1,4 +1,4 @@
-import 'package:simple_note/features/notes/data/models/note_dto.dart';
+import 'package:simple_note/features/notes/data/datasources/remote/note_dto.dart';
 import 'package:simple_note/features/notes/data/datasources/remote/notes_remote_data_source.dart';
 import 'package:simple_note/features/notes/domain/entities/note.dart';
 import 'package:simple_note/features/notes/domain/repositories/notes_repository.dart';

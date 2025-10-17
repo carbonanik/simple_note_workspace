@@ -1,5 +1,5 @@
 import 'package:simple_note/core/network/api_client.dart';
-import 'package:simple_note/features/notes/data/models/note_dto.dart';
+import 'package:simple_note/features/notes/data/datasources/remote/note_dto.dart';
 
 abstract interface class NotesRemoteDataSource {
   Future<ApiResponse<List<NoteDto>>> getNotes();
