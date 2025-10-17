@@ -1,7 +1,7 @@
 import 'package:simple_note/app_constants.dart';
 import 'package:simple_note/core/database/drift_database.dart';
 import 'package:simple_note/core/sl/sl.dart';
-import 'package:simple_note/core/network/api_client.dart';
+import 'package:simple_note/core/network/custom_api_client.dart';
 import 'package:simple_note/features/notes/data/datasources/local/notes_local_datasource.dart';
 import 'package:simple_note/features/notes/data/datasources/remote/notes_remote_data_source.dart';
 import 'package:simple_note/features/notes/data/repositories/local_notes_repository.dart';

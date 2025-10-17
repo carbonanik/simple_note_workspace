@@ -1,42 +1,41 @@
-import 'package:simple_note/features/notes/data/datasources/remote/note_dto.dart';
-import 'package:simple_note/features/notes/data/datasources/remote/notes_remote_data_source.dart';
+// lib/features/notes/data/repositories/network_notes_repository.dart
+import 'package:simple_note/features/notes/data/models/network_note_model.dart';
+import 'package:simple_note/features/notes/data/datasources/remote/notes_network_datasource.dart';
 import 'package:simple_note/features/notes/domain/entities/note.dart';
 import 'package:simple_note/features/notes/domain/repositories/notes_repository.dart';
 
 class NetworkNotesRepository implements NotesRepository {
-  final NotesRemoteDataSource dataSource;
+  final NotesNetworkDataSource networkDataSource;
 
-  NetworkNotesRepository(this.dataSource);
-
-  @override
-  Future<int> addNote(NoteEntity note) async {
-    final newNote = await dataSource.createNote(NoteDto.fromEntity(note));
-    if (newNote.data?.id == null) {
-      throw Exception('Failed to create note');
-    }
-    return newNote.data!.id!;
-  }
+  NetworkNotesRepository(this.networkDataSource);
 
   @override
   Future<List<NoteEntity>> getNotes() async {
-    final notes = await dataSource.getNotes();
-    return notes.data?.map((note) => note.toEntity()).toList() ?? [];
+    final models = await networkDataSource.getNotes();
+    return models.map((m) => m.toEntity()).toList();
   }
 
   @override
-  Future<void> deleteNote(int id) async {
-    await dataSource.deleteNote(id);
-  }
-
-  @override
-  Future<NoteEntity?> getNoteById(int id) async {
-    final note = await dataSource.getNoteById(id);
-    return note.data?.toEntity();
+  Future<int> addNote(NoteEntity note) async {
+    final model = await networkDataSource.createNote(
+      NetworkNoteModel.fromEntity(note),
+    );
+    return model.id ?? 0;
   }
 
   @override
   Future<void> updateNote(NoteEntity note) async {
-    assert(note.id != null);
-    await dataSource.updateNote(note.id!, NoteDto.fromEntity(note));
+    await networkDataSource.updateNote(NetworkNoteModel.fromEntity(note));
+  }
+
+  @override
+  Future<void> deleteNote(int id) async {
+    await networkDataSource.deleteNote(id);
+  }
+
+  @override
+  Future<NoteEntity?> getNoteById(int id) async {
+    final model = await networkDataSource.getNoteById(id);
+    return model?.toEntity();
   }
 }
