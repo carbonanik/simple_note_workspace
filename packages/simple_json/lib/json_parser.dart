@@ -53,8 +53,9 @@ class JsonParser {
         if (value is int) return value;
         if (value is String) {
           final parsed = int.tryParse(value);
-          if (parsed == null)
+          if (parsed == null) {
             throw FormatException('Cannot parse "$value" to int');
+          }
           return parsed;
         }
         if (value is double) return value.toInt();
@@ -89,8 +90,9 @@ class JsonParser {
         if (value is int) return value.toDouble();
         if (value is String) {
           final parsed = double.tryParse(value);
-          if (parsed == null)
+          if (parsed == null) {
             throw FormatException('Cannot parse "$value" to double');
+          }
           return parsed;
         }
         throw TypeError();

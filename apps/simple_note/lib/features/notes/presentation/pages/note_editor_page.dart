@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:simple_note/core/sl/sl.dart';
+import 'package:simple_note/core/utils/snack_bar_extension.dart';
 import 'package:simple_note/features/notes/domain/entities/note.dart';
 import 'package:simple_note/features/notes/presentation/controllers/note_editor_controller.dart';
 import 'package:simple_note/features/notes/presentation/controllers/notes_controller.dart';
@@ -58,16 +59,11 @@ class NoteEditorPage extends StatelessWidget {
 
     if (result.isSuccess) {
       context.read<NotesController>().reload();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Note saved successfully')));
+      context.showSnackBar('Note saved successfully');
     }
 
     if (result.isError) {
-      debugPrint(result.toString());
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to save note')));
+      context.showSnackBar('Failed to save note');
     }
   }
 }

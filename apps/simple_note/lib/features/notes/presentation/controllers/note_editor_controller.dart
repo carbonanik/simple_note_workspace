@@ -75,11 +75,11 @@ class NoteEditorController extends AsyncStateNotifier<NoteEntity> {
 class Result<T> {
   const Result();
 
-  get isSuccess => this is Success;
-  get isError => this is Error;
+  bool get isSuccess => this is Success;
+  bool get isError => this is Error;
 
-  get successValue => (this as Success).value;
-  get errorMessage => (this as Error).message;
+  T get successValue => (this as Success<T>).value;
+  String get errorMessage => (this as Error).message;
 }
 
 class Success<T> extends Result<T> {

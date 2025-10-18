@@ -14,10 +14,7 @@ class MultiProvider extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget result = child;
     for (final provider in providers.reversed) {
-      result = StateProvider(
-        notifier: provider.notifier as ChangeNotifier,
-        child: child,
-      );
+      result = StateProvider(notifier: provider.notifier, child: child);
     }
     return result;
   }

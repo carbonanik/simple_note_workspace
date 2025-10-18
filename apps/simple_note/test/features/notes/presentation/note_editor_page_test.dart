@@ -9,7 +9,7 @@ void main() {
   testWidgets('NoteEditorPage loads note data into text fields', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(MaterialApp(home: NoteEditorFlow()));
+    await tester.pumpWidget(const MaterialApp(home: NoteEditorFlow()));
 
     // Check AppBar title
     expect(find.text('Note Editor'), findsOneWidget);

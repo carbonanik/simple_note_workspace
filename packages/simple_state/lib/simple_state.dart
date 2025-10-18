@@ -1,4 +1,4 @@
-library simple_state;
+library;
 
 export 'src/async_data.dart';
 export 'src/notifiers/state_notifier.dart';

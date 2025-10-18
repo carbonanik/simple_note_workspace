@@ -1,4 +1,4 @@
-library simple_json_generator;
+library;
 
 import 'package:build/build.dart';
 import 'package:simple_json_generator/src/json_generator.dart';

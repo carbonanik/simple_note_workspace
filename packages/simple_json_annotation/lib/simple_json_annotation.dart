@@ -1,3 +1,3 @@
-library simple_json_annotation;
+library;
 
 export 'src/json_generator.dart';
