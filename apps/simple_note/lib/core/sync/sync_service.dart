@@ -1,6 +1,7 @@
 // lib/core/sync/sync_service.dart
 import 'dart:async';
 import 'dart:convert';
+import 'package:drift/drift.dart';
 import 'package:simple_note/core/database/drift_database.dart';
 import 'package:simple_note/features/notes/data/datasources/local/notes_local_datasource.dart';
 import 'package:simple_note/features/notes/data/datasources/remote/notes_network_datasource.dart';
@@ -79,7 +80,7 @@ class SyncService {
       // Mark as syncing
       await (database.update(database.syncQueue)
             ..where((t) => t.id.equals(item.id)))
-          .write(SyncQueueCompanion(status: const Value('syncing')));
+          .write(const SyncQueueCompanion(status: Value('syncing')));
 
       // Process based on operation type
       switch (item.operation) {
