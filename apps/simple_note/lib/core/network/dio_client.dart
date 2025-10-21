@@ -20,11 +20,14 @@ class DioClient {
     );
 
     dio.interceptors.add(ApiInterceptor());
-
     dio.interceptors.add(
-      LogInterceptor(requestBody: true, responseBody: true, error: true),
+      LogInterceptor(
+        request: true,
+        error: true,
+        requestBody: true,
+        responseBody: true,
+      ),
     );
-
     return dio;
   }
 }

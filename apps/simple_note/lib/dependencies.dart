@@ -1,33 +1,25 @@
 import 'package:simple_note/app_constants.dart';
 import 'package:simple_note/core/database/drift_database.dart';
+import 'package:simple_note/core/network/dio_client.dart';
 import 'package:simple_note/core/sl/sl.dart';
-import 'package:simple_note/core/network/custom_api_client.dart';
 import 'package:simple_note/features/notes/data/datasources/local/notes_local_datasource.dart';
-import 'package:simple_note/features/notes/data/datasources/remote/notes_remote_data_source.dart';
-import 'package:simple_note/features/notes/data/repositories/local_notes_repository.dart';
+import 'package:simple_note/features/notes/data/datasources/remote/notes_api_service.dart';
+import 'package:simple_note/features/notes/data/datasources/remote/notes_network_datasource.dart';
+import 'package:simple_note/features/notes/data/repositories/network_note_repository.dart';
 import 'package:simple_note/features/notes/domain/repositories/notes_repository.dart';
 
 void initializedDependencies() {
   final di = SL();
 
-  // Config
-  di.register(() => AppConstants.baseUrl, key: 'baseUrl');
-  di.register<ResponseAdapter>(() => WrappedResponseAdapter());
-
   // Data Source
-  di.registerLazy<ApiClient>(
-    () => HttpApiClient(
-      baseUrl: di.get(key: 'baseUrl'),
-      responseAdapter: di.get<ResponseAdapter>(),
-    ),
-  );
-  di.registerLazy<NotesRemoteDataSource>(
-    () => NotesRemoteDataSourceImpl(di.get()),
-  );
-
   di.registerLazy(() => AppDatabase());
   di.registerLazy(() => NotesLocalDataSource(di.get()));
+  di.registerLazy(
+    () => NotesApiService(DioClient.create(baseUrl: AppConstants.baseUrl)),
+  );
+
+  di.registerLazy(() => NotesNetworkDataSource(di.get()));
 
   // Repository
-  di.registerLazy<NotesRepository>(() => LocalNotesRepository(di.get()));
+  di.registerLazy<NotesRepository>(() => NetworkNotesRepository(di.get()));
 }
