@@ -1,5 +1,9 @@
 import 'package:dio/dio.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:simple_note/app_constants.dart';
 import 'package:simple_note/core/network/interceptors/api_interceptor.dart';
+
+part 'dio_client.g.dart';
 
 class DioClient {
   static Dio create({
@@ -30,4 +34,9 @@ class DioClient {
     );
     return dio;
   }
+}
+
+@riverpod
+Dio dioClient(Ref ref) {
+  return DioClient.create(baseUrl: AppConstants.baseUrl);
 }

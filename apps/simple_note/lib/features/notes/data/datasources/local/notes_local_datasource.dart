@@ -1,5 +1,8 @@
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:simple_note/core/database/drift_database.dart';
 import 'package:simple_note/features/notes/data/models/notes_model.dart';
+
+part 'notes_local_datasource.g.dart';
 
 class NotesLocalDataSource {
   final AppDatabase db;
@@ -30,4 +33,10 @@ class NotesLocalDataSource {
     )..where((t) => t.id.equals(id))).getSingleOrNull();
     return row != null ? NoteModel.fromDrift(row) : null;
   }
+}
+
+@riverpod
+NotesLocalDataSource notesLocalDataSource(Ref ref) {
+  final db = ref.read(appDatabaseProvider);
+  return NotesLocalDataSource(db);
 }

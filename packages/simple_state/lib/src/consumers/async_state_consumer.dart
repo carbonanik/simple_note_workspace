@@ -41,9 +41,10 @@ class AsyncStateConsumer<T extends AsyncStateNotifier<D>, D>
           onLoading?.call(context, notifier) ??
           const Center(child: CircularProgressIndicator()),
       success: (value) => onSuccess!(context, value!, notifier),
-      error: (_, err) =>
-          onError?.call(context, err, notifier) ??
-          Center(child: Text('Error: $err')),
+      error: (_, err) {
+        return onError?.call(context, err, notifier) ??
+            Center(child: Text(err?.toString() ?? 'An error occurred'));
+      },
     );
   }
 }

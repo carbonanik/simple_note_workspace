@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:simple_note/core/network/dio_client.dart';
 import 'package:simple_note/core/network/model/api_response.dart';
 import 'package:simple_note/features/notes/data/models/network_note_model.dart';
 
@@ -28,4 +30,10 @@ abstract class NotesApiService {
 
   @DELETE('/notes/{id}')
   Future<ApiResponse<void>> deleteNote(@Path('id') int id);
+}
+
+@riverpod
+NotesApiService notesApiService(Ref ref) {
+  final dio = ref.read(dioClientProvider);
+  return NotesApiService(dio);
 }

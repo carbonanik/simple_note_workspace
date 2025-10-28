@@ -1,8 +1,11 @@
 // lib/features/notes/data/repositories/network_notes_repository.dart
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:simple_note/features/notes/data/models/network_note_model.dart';
 import 'package:simple_note/features/notes/data/datasources/remote/notes_network_datasource.dart';
 import 'package:simple_note/features/notes/domain/entities/note.dart';
 import 'package:simple_note/features/notes/domain/repositories/notes_repository.dart';
+
+part 'network_note_repository.g.dart';
 
 class NetworkNotesRepository implements NotesRepository {
   final NotesNetworkDataSource networkDataSource;
@@ -38,4 +41,10 @@ class NetworkNotesRepository implements NotesRepository {
     final model = await networkDataSource.getNoteById(id);
     return model?.toEntity();
   }
+}
+
+@riverpod
+NotesRepository networkNotesRepository(Ref ref) {
+  final networkDataSource = ref.read(notesNetworkDataSourceProvider);
+  return NetworkNotesRepository(networkDataSource);
 }

@@ -47,6 +47,9 @@ class ApiInterceptor extends Interceptor {
         final message =
             error.response?.data?['message'] ?? 'Server error occurred';
 
+        print('statusCode: $statusCode');
+        print(message);
+
         return ApiException(
           message: message,
           statusCode: statusCode,

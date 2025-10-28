@@ -2,8 +2,6 @@
 
 part of 'notes_api_service.dart';
 
-// dart format off
-
 // **************************************************************************
 // RetrofitGenerator
 // **************************************************************************
@@ -207,4 +205,51 @@ class _NotesApiService implements NotesApiService {
   }
 }
 
-// dart format on
+// **************************************************************************
+// RiverpodGenerator
+// **************************************************************************
+
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
+
+@ProviderFor(notesApiService)
+const notesApiServiceProvider = NotesApiServiceProvider._();
+
+final class NotesApiServiceProvider
+    extends
+        $FunctionalProvider<NotesApiService, NotesApiService, NotesApiService>
+    with $Provider<NotesApiService> {
+  const NotesApiServiceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'notesApiServiceProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$notesApiServiceHash();
+
+  @$internal
+  @override
+  $ProviderElement<NotesApiService> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  NotesApiService create(Ref ref) {
+    return notesApiService(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(NotesApiService value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<NotesApiService>(value),
+    );
+  }
+}
+
+String _$notesApiServiceHash() => r'f3aad6d07f840cd75ee8ff2f2bd3d8d3f6172059';

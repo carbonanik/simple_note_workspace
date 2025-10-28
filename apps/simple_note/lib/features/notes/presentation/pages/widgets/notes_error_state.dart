@@ -12,7 +12,6 @@ class NotesErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('Error: $error');
     return Center(
       key: const Key('error_widget'),
       child: Column(
@@ -20,7 +19,7 @@ class NotesErrorState extends StatelessWidget {
         children: [
           const Icon(Icons.error_outline, size: 48, color: Colors.red),
           const SizedBox(height: 16),
-          Text('Error: $error', textAlign: TextAlign.center),
+          Text('$error', textAlign: TextAlign.center),
           const SizedBox(height: 16),
           ElevatedButton(
             key: const Key('retry_button'),

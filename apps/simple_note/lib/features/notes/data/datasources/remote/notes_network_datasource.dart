@@ -1,7 +1,10 @@
 import 'package:dio/dio.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:simple_note/core/network/exception/api_exception.dart';
 import 'package:simple_note/features/notes/data/models/network_note_model.dart';
 import 'package:simple_note/features/notes/data/datasources/remote/notes_api_service.dart';
+
+part 'notes_network_datasource.g.dart';
 
 class NotesNetworkDataSource {
   final NotesApiService apiService;
@@ -21,7 +24,6 @@ class NotesNetworkDataSource {
   Future<NetworkNoteModel?> getNoteById(int id) async {
     try {
       final response = await apiService.getNoteById(id);
-
       return response.data;
     } catch (e) {
       throw _handleException(e);
@@ -31,7 +33,6 @@ class NotesNetworkDataSource {
   Future<NetworkNoteModel> createNote(NetworkNoteModel note) async {
     try {
       final response = await apiService.createNote(note.toJson());
-
       return response.data!;
     } catch (e) {
       throw _handleException(e);
@@ -56,16 +57,17 @@ class NotesNetworkDataSource {
 
   Exception _handleException(Object e) {
     if (e is DioException) {
-      print('----');
-      print(e.response);
-      print(e.message);
-      print(e.error);
-      // return ApiException.fromDioError(e);
+      if (e.error is ApiException) {
+        return e.error as ApiException;
+      }
+      return ApiException(message: 'Unexpected network error occurred');
     }
-    // return ApiException(
-    // message: 'An unexpected error occurred: ${e.toString()}',
-    // );
-
     return e as Exception;
   }
+}
+
+@riverpod
+NotesNetworkDataSource notesNetworkDataSource(Ref ref) {
+  final apiService = ref.read(notesApiServiceProvider);
+  return NotesNetworkDataSource(apiService);
 }
